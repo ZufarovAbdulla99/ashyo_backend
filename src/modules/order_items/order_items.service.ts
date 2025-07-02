@@ -1,64 +1,70 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { OrderItems } from './models';
-import { Order } from '../order/models';
-import { ProductItem } from '../product_item';
+// import { Order } from '../order/models';
+// import { ProductItem } from '../product_item';
+import {Order} from 'src/modules/order/models/order.model'
+import {ProductItem} from 'src/modules/product_item/models/product_item.entity'
 
 @Injectable()
 export class OrderItemsService {
   constructor(
-    @InjectModel(OrderItems)
-    private orderItemsRepository: typeof OrderItems,
-    @InjectModel(Order)
-    private orderRepository: typeof Order,
-    @InjectModel(ProductItem)
-    private productItemRepository: typeof ProductItem,
-  ) { }
+    @InjectRepository(OrderItems)
+    private readonly orderItemsRepository: Repository<OrderItems>,
+
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+
+    @InjectRepository(ProductItem)
+    private readonly productItemRepository: Repository<ProductItem>,
+  ) {}
 
   async create(createOrderItemDto: {
     order_id: number;
     product_item_id: number;
     quantity: number;
-  }) {
-    const productItem = await this.productItemRepository.findByPk(
-      createOrderItemDto.product_item_id,
-    );
+  }): Promise<OrderItems> {
+    const productItem = await this.productItemRepository.findOne({
+      where: { id: createOrderItemDto.product_item_id },
+    });
 
     if (!productItem) {
-      throw new Error('ProductItem not found');
+      throw new NotFoundException('ProductItem not found');
     }
 
-    const orderItem = await this.orderItemsRepository.create({
+    const orderItem = this.orderItemsRepository.create({
       ...createOrderItemDto,
       price: productItem.price,
     });
 
-    const allOrderItems = await this.orderItemsRepository.findAll({
+    await this.orderItemsRepository.save(orderItem);
+
+    const allOrderItems = await this.orderItemsRepository.find({
       where: { order_id: createOrderItemDto.order_id },
     });
 
     const totalPrice = allOrderItems.reduce((sum, item) => {
-      return sum + item.price * item.quantity;
+      return sum + Number(item.price) * item.quantity;
     }, 0);
 
-    await this.orderRepository.update(
-      { total_price: totalPrice },
-      { where: { id: createOrderItemDto.order_id } },
-    );
+    await this.orderRepository.update(createOrderItemDto.order_id, {
+      total_price: totalPrice,
+    });
 
     return orderItem;
   }
 
-  async findAll() {
-    return this.orderItemsRepository.findAll({
-      include: [ProductItem, Order],
+  async findAll(): Promise<OrderItems[]> {
+    return this.orderItemsRepository.find({
+      relations: ['product_item', 'order'],
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<OrderItems | null> {
     return this.orderItemsRepository.findOne({
       where: { id },
-      include: [ProductItem, Order],
+      relations: ['product_item', 'order'],
     });
   }
 }

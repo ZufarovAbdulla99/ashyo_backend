@@ -1,30 +1,31 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { User } from '../user'; 
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { SequelizeModule } from '@nestjs/sequelize';
+import { User } from '../user';
 
 @Module({
-    
   imports: [
-    SequelizeModule.forFeature([User]),
-    
+    TypeOrmModule.forFeature([User]),
+
     MailerModule.forRoot({
-        transport: {
-          host: 'smtp.gmail.com',
-          port: 587,  
-          secure: false, 
-          auth: {
-            user: `kamronbekbahriyev18@gmail.com`,
-            pass:  `whudllcxkbgnpgmu`,
-          },
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: `kamronbekbahriyev18@gmail.com`,
+          pass: `whudllcxkbgnpgmu`,
         },
-        defaults: {
-          from: `"No Reply" <${process.env.SENDING_EMAIL}>`,
-        },
-      })
+      },
+      defaults: {
+        from: `"No Reply" <${process.env.SENDING_EMAIL}>`,
+      },
+    }),
+
+    JwtModule.register({}), // agar global JWT config bo'lsa bu bo'lim optional
   ],
   providers: [AuthService],
   controllers: [AuthController],

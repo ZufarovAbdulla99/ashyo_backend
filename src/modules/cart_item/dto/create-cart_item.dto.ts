@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CartItem } from '../models';
 
 // CreateCartItemDto
-export class CreateCartItemDto implements Partial<Attributes<CartItem>> {
+export class CreateCartItemDto {
 
   @ApiProperty({
     description: 'The ID of the user',

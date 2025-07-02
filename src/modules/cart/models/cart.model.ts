@@ -1,28 +1,37 @@
 import {
-  Table,
-  Model,
+  Entity,
   Column,
-  DataType,
-  ForeignKey,
-  BelongsTo,
-} from 'sequelize-typescript';
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Product } from 'src/modules/product';
-import { User } from 'src/modules/user'; // User modelini import qiling
+// import { User } from 'src/modules/user'; // User modelini import qiling
 
-@Table({ tableName: 'cart', timestamps: true })
-export class Cart extends Model {
-  // @ForeignKey(() => User) // User modeliga foreign key
-  // @Column({ type: DataType.BIGINT, allowNull: false })
+@Entity('cart')
+export class Cart {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  // @ManyToOne(() => User, (user) => user.cart, { nullable: false })
+  // @JoinColumn({ name: 'user_id' })
+  // user: User;
+
+  // @Column({ type: 'bigint' })
   // user_id: number;
 
-  @ForeignKey(() => Product)
-  @Column({ type: DataType.BIGINT, allowNull: false })
-  product_id: number;
-
-
-  @BelongsTo(() => Product)
+  @ManyToOne(() => Product, (product) => product.cartItems, { nullable: false })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  // @BelongsTo(() => User) 
-  // user: User;
+  @Column({ type: 'bigint' })
+  product_id: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

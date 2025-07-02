@@ -1,68 +1,61 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { Banner } from './model';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateBannerDto, UpdateBannerDto } from './dto';
-import { Product } from '../product';
-import { Category } from '../category';
-import { FileService } from '../file';
+
+import { FileService } from '../file/file.service';
+import { Banner } from './model';
 
 @Injectable()
 export class BannerService {
   constructor(
-    @InjectModel(Banner)
-    private readonly bannerModel: typeof Banner,
-    private fileService: FileService,
+    @InjectRepository(Banner)
+    private readonly bannerRepository: Repository<Banner>,
+    private readonly fileService: FileService,
   ) {}
 
-  async create(createBannerDto: CreateBannerDto, file: Express.Multer.File): Promise<Banner> {
-    const image = await this.fileService.uploadFile(file)
+  async create(
+    createBannerDto: CreateBannerDto,
+    file: Express.Multer.File,
+  ): Promise<Banner> {
+    const image = await this.fileService.uploadFile(file);
 
-    const banner = await this.bannerModel.create({
-      product_id: createBannerDto.product_id,
-      category_id: createBannerDto.category_id,
-      title: createBannerDto.title,
-      description: createBannerDto.description,
-      image: image,
-      name: createBannerDto.name,
+    const banner = this.bannerRepository.create({
+      ...createBannerDto,
+      image,
     });
-    return banner;
+
+    return this.bannerRepository.save(banner);
   }
 
   async findAll(): Promise<Banner[]> {
-    return this.bannerModel.findAll({
-      include: [
-                { model: Product},
-                { model: Category},
-              ]
+    return this.bannerRepository.find({
+      relations: ['product', 'category'],
     });
   }
 
-  // Get a banner by id
   async findOne(id: number): Promise<Banner> {
-    return this.bannerModel.findByPk(id,{
-      include: [
-        { model: Product},
-        { model: Category},
-      ]
+    const banner = await this.bannerRepository.findOne({
+      where: { id },
+      relations: ['product', 'category'],
     });
-  }
 
-  // Update a banner by id
-  async update(id: number, updateBannerDto: UpdateBannerDto): Promise<Banner> {
-    const banner = await this.findOne(id);
     if (!banner) {
-      throw new Error('Banner not found');
+      throw new NotFoundException('Banner not found');
     }
-    await banner.update(updateBannerDto);
+
     return banner;
   }
 
-  // Delete a banner by id
+  async update(id: number, updateBannerDto: UpdateBannerDto): Promise<Banner> {
+    const banner = await this.findOne(id);
+
+    Object.assign(banner, updateBannerDto);
+    return this.bannerRepository.save(banner);
+  }
+
   async remove(id: number): Promise<void> {
     const banner = await this.findOne(id);
-    if (!banner) {
-      throw new Error('Banner not found');
-    }
-    await banner.destroy();
+    await this.bannerRepository.remove(banner);
   }
 }

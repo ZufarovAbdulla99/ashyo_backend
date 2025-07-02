@@ -1,68 +1,65 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { Order } from './models/order.model';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Order } from './models';
 import { CreateOrderDto, UpdateOrderDto } from './dto';
-import { User } from '../user/models/user.model';
-import { Address } from '../address';
-import { Region } from '../region';
 
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectModel(Order)
-    private orderModel: typeof Order,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    return await this.orderModel.create({ ...createOrderDto });
+    const order = this.orderRepository.create(createOrderDto);
+    return this.orderRepository.save(order);
   }
 
   async findAll(): Promise<Order[]> {
-    return await this.orderModel.findAll({
-      include: [
-        {
-          model: User,
-          // attributes: ['id', 'name', 'email'],
-        },
-        {
-          model: Address,
-          include: [{ model: Region, as: 'region' }, { model: Region, as: 'city' }, { model: Region, as: 'district' }],
-          // attributes: ['id', 'address', 'city', 'country'],
-        },
+    return this.orderRepository.find({
+      relations: [
+        'user',
+        'address',
+        'address.region',
+        'address.city',
+        'address.district',
       ],
+      // select: {
+      //   user: { id: true, name: true, email: true }, // TypeORM'da faqat `find` emas, `QueryBuilder` bilan yaxshiroq ishlaydi
+      //   address: { id: true, address: true, city: true, country: true }
+      // }
     });
   }
 
   async findOne(id: number): Promise<Order> {
-    return await this.orderModel.findOne({
+    return this.orderRepository.findOne({
       where: { id },
-      include: [
-        {
-          model: User,
-          // attributes: ['id', 'name', 'email'],
-        },
-        {
-          model: Address,
-          include: [{ model: Region, as: 'region' }, { model: Region, as: 'city' }, { model: Region, as: 'district' }],
-          // attributes: ['id', 'address', 'city', 'country'],
-        },
+      relations: [
+        'user',
+        'address',
+        'address.region',
+        'address.city',
+        'address.district',
       ],
+      // select: {
+      //   user: { id: true, name: true, email: true },
+      //   address: { id: true, address: true, city: true, country: true }
+      // }
     });
   }
 
   async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    const order = await this.orderModel.findByPk(id);
+    const order = await this.orderRepository.findOne({ where: { id } });
     if (!order) {
       return null;
     }
-    await order.update(updateOrderDto);
-    return order;
+    Object.assign(order, updateOrderDto);
+    return this.orderRepository.save(order);
   }
 
   async remove(id: number): Promise<boolean> {
-    const deleted = await this.orderModel.destroy({
-      where: { id },
-    });
-    return deleted > 0;
+    const result = await this.orderRepository.delete(id);
+    return result.affected > 0;
   }
 }

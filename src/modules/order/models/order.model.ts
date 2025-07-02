@@ -1,40 +1,50 @@
 import {
-  Table,
-  Model,
+  Entity,
   Column,
-  DataType,
-  ForeignKey,
-  BelongsTo,
-} from 'sequelize-typescript';
-import { Address } from 'src/modules/address';
-import { User } from 'src/modules/user/models/user.model';
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { OrderStatus } from '../enums';
+import { User } from 'src/modules/user';
+import { Address } from 'src/modules/address';
+import { OrderItems } from 'src/modules/order_items';
 
-@Table({ tableName: 'order', timestamps: true })
-export class Order extends Model {
-  @ForeignKey(() => User)
-  @Column({ type: DataType.BIGINT, allowNull: false })
+@Entity({ name: 'order' })
+export class Order {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'bigint' })
   user_id: number;
 
-  @BelongsTo(() => User)
+  @ManyToOne(() => User, (user) => user.order, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ForeignKey(() => Address)
-  @Column({ type: DataType.BIGINT, allowNull: false })
+  @OneToMany(() => OrderItems, (orderItem) => orderItem.order)
+  order_items: OrderItems[];
+
+  @Column({ type: 'bigint' })
   address_id: number;
 
-  @BelongsTo(() => Address)
+  @ManyToOne(() => Address, (address) => address.orders, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'address_id' })
   address: Address;
 
   @Column({
-    type: DataType.ENUM,
-    values: [OrderStatus.delivered, OrderStatus.denied, OrderStatus.processing],
-    allowNull: false,
+    type: 'enum',
+    enum: OrderStatus,
   })
   status: OrderStatus;
 
   @Column({
-    type: DataType.DECIMAL(10, 2), allowNull: false
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
   })
-  total_price: number | null
+  total_price: number;
 }

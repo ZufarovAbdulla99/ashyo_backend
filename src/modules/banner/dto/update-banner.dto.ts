@@ -1,8 +1,4 @@
-export class UpdateBannerDto {
-    product_id?: number;
-    category_id?: number;
-    title?: string;
-    description?: string;
-    image?: string;
-    name?: string;
-  }
+import { PartialType } from '@nestjs/swagger';
+import { CreateBannerDto } from './create-banner.dto';
+
+export class UpdateBannerDto extends PartialType(CreateBannerDto) {}

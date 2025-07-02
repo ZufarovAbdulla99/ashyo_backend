@@ -1,27 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TelegramService } from '../telegram/telegram.service';
 import { Contact } from './models';
 import { CreateContactDto } from './dtos';
-import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class ContactService {
-    constructor(
-        @InjectModel(Contact) private contactModel: typeof Contact,
-        private telegramService: TelegramService,
-    ) { }
+  constructor(
+    @InjectRepository(Contact)
+    private readonly contactRepository: Repository<Contact>,
+    private readonly telegramService: TelegramService,
+  ) {}
 
-    async createContact(dto: CreateContactDto): Promise<Contact> {
-        const contact = await this.contactModel.create(
-            { name: dto.name, email: dto.email, message: dto.message },
-        );
+  async createContact(dto: CreateContactDto): Promise<Contact> {
+    const contact = this.contactRepository.create({
+      name: dto.name,
+      email: dto.email,
+      message: dto.message,
+    });
 
-        const message = `New Contact Us Message:
+    await this.contactRepository.save(contact);
+
+    const message = `New Contact Us Message:
 - Name: ${dto.name}
 - Email: ${dto.email}
 - Message: ${dto.message}`;
-        await this.telegramService.sendMessage(message);
+    await this.telegramService.sendMessage(message);
 
-        return contact;
-    }
+    return contact;
+  }
 }

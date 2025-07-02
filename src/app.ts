@@ -1,6 +1,12 @@
-import { appConfig, databaseConfig, jwtConfig } from '@config';
 import { CheckAuthGuard, CheckRoleGuard } from '@guards';
-import { ModelCtor } from 'sequelize-typescript';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { APP_GUARD } from '@nestjs/core';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { appConfig, databaseConfig, jwtConfig } from '@config';
+import { SeedsModule } from '@seeds';
 import {
   Brand,
   BrandModule,
@@ -41,16 +47,9 @@ import {
   TelegramModule,
   Banner,
   BannerModule,
+  RegionModule,
+  AuthModule,
 } from '@modules';
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { AuthModule } from './modules/auth/auth.module';
-import { SeedsModule } from '@seeds';
-import { RegionModule } from './modules/region/region.module';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -69,51 +68,95 @@ import { APP_GUARD } from '@nestjs/core';
         expiresIn: 60 * 15,
       },
     }),
-    SequelizeModule.forRootAsync({
+    // TypeOrmModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: async (config: ConfigService) => {
+    //     try {
+    //       return {
+    //         type: 'postgres',
+    //         host: config.get<string>('databaseConfig.host'),
+    //         port: config.get<number>('databaseConfig.port'),
+    //         username: config.get<string>('databaseConfig.user'),
+    //         password: config.get<string>('databaseConfig.password'),
+    //         database: config.get<string>('databaseConfig.dbname'),
+    //         entities: [
+    //           User,
+    //           Like,
+    //           Comment,
+    //           Cart,
+    //           CartItem,
+    //           Order,
+    //           OrderItems,
+    //           ProductConfiguration,
+    //           ProductItem,
+    //           Variation,
+    //           VariationOption,
+    //           Region,
+    //           Product,
+    //           Category,
+    //           Brand,
+    //           Contact,
+    //           Banner,
+    //           Address,
+    //           Color
+    //         ],
+    //         // synchronize: true,
+    //         logging: true,
+    //       };
+    //     } catch (error) {
+    //       console.error('Error occurred while connecting to the database', error);
+    //       throw error;
+    //     }
+    //   },
+    // }),
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        try {
-          return {
-            dialect: 'postgres',
-            host: config.get<string>('databaseConfig.host'),
-            port: config.get<number>('databaseConfig.port'),
-            username: config.get<string>('databaseConfig.user'),
-            password: config.get<string>('databaseConfig.password'),
-            database: config.get<string>('databaseConfig.dbname'),
-            models: [
-              User,
-              Like,
-              Comment,
-              CartItem,
-              Order,
-              OrderItems,
-              ProductConfiguration,
-              ProductItem,
-              Variation,
-              VariationOption,
-              Region,
-              Product,
-              Category,
-              Brand,
-              Contact,
-              Banner,
-              Address,
-              Color
-            ] as ModelCtor[],
-            //sync: { force: true },
-            synchronize: true,
-            logging: console.log,
-            autoLoadModels: true,
-          };
-        } catch (error) {
-          console.error(
-            'Error occurred while connecting to the database',
-            error,
+        const url = config.get<string>('databaseConfig.url');
+
+        if (!url) {
+          throw new Error(
+            'DATABASE_URL is not defined in the environment variables',
           );
-          throw error;
         }
-      }
+
+        return {
+          type: 'postgres',
+          url, // URL orqali ulanish
+          entities: [
+            User,
+            Like,
+            Comment,
+            Cart,
+            CartItem,
+            Order,
+            OrderItems,
+            ProductConfiguration,
+            ProductItem,
+            Variation,
+            VariationOption,
+            Region,
+            Product,
+            Category,
+            Brand,
+            Contact,
+            Banner,
+            Address,
+            Color,
+          ],
+          // synchronize: true,
+          logging: true,
+
+          // Agar kerak bo‘lsa quyidagilarni qo‘shish mumkin:
+          // ssl: {
+          //   rejectUnauthorized: false,
+          // },
+
+          dropSchema: true,
+        };
+      },
     }),
     UserModule,
     RegionModule,
@@ -121,6 +164,7 @@ import { APP_GUARD } from '@nestjs/core';
     FileModule,
     LikeModule,
     CommentModule,
+    CartModule,
     CartItemModule,
     OrderModule,
     OrderItemsModule,
@@ -139,7 +183,7 @@ import { APP_GUARD } from '@nestjs/core';
     TelegramModule,
   ],
   controllers: [],
-   providers: [
+  providers: [
     //  {
     //    useClass: CheckAuthGuard,
     //    provide: APP_GUARD,
@@ -148,6 +192,6 @@ import { APP_GUARD } from '@nestjs/core';
     //    useClass: CheckRoleGuard,
     //    provide: APP_GUARD,
     //  },
-   ],
+  ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -4,6 +4,7 @@ export const databaseConfig = () => ({
         port: parseInt(process.env.DB_PORT),
         dbname: process.env.DB_NAME,
         password: process.env.DB_PASSWORD,
-        user: process.env.DB_USER
+        user: process.env.DB_USER,
+        url: process.env.DATABASE_URL,
     }
 })

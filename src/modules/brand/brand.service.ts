@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { Brand } from './models';
-import { FileService } from '../file';
-import { InjectModel } from '@nestjs/sequelize';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { FileService } from '../file/file.service';
 import { CreateBrandRequest, UpdateBrandRequest } from './interfaces';
+import { Brand } from './models';
 
 @Injectable()
 export class BrandService {
   constructor(
-    @InjectModel(Brand) private brandModel: typeof Brand,
-    private fileService: FileService,
+    @InjectRepository(Brand)
+    private readonly brandRepository: Repository<Brand>,
+    private readonly fileService: FileService,
   ) {}
 
   async createBrand(
@@ -16,27 +18,30 @@ export class BrandService {
     file: Express.Multer.File,
   ): Promise<{ message: string; newBrand: Brand }> {
     const image = await this.fileService.uploadFile(file);
-    console.log(image);
 
-    const newBrand = await this.brandModel.create({
+    const newBrand = this.brandRepository.create({
       name: payload.name,
       image,
     });
 
+    await this.brandRepository.save(newBrand);
+
     return {
-      message: 'Brand created Successfully',
+      message: 'Brand created successfully',
       newBrand,
     };
   }
 
   async getAllBrands(): Promise<Brand[]> {
-    return await this.brandModel.findAll();
+    return await this.brandRepository.find();
   }
 
   async getSingleBrand(id: number): Promise<Brand> {
-    return await this.brandModel.findOne({
-      where: { id },
-    });
+    const brand = await this.brandRepository.findOne({ where: { id } });
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+    return brand;
   }
 
   async updateBrand(
@@ -44,32 +49,43 @@ export class BrandService {
     payload: UpdateBrandRequest,
     file?: Express.Multer.File,
   ): Promise<{ message: string; updatedBrand: Brand }> {
-    let newImage: string | undefined;
+    const brand = await this.brandRepository.findOne({ where: { id } });
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
 
     if (file) {
-      newImage = await this.fileService.uploadFile(file);
-      const brand = await this.brandModel.findOne({ where: { id } });
-      if (brand?.image) {
+      const newImage = await this.fileService.uploadFile(file);
+      if (brand.image) {
         await this.fileService.deleteFile(brand.image);
       }
       payload.image = newImage;
     }
-    await this.brandModel.update(payload, {
-      where: { id },
-    });
-    const updatedBrand = await this.brandModel.findOne({ where: { id } });
+
+    const updated = Object.assign(brand, payload);
+    await this.brandRepository.save(updated);
+
     return {
       message: 'Brand updated successfully',
-      updatedBrand,
+      updatedBrand: updated,
     };
   }
 
   async deleteBrand(id: number): Promise<{ message: string }> {
-    const foundedBrand = await this.brandModel.findByPk(id);
-    await this.fileService.deleteFile(foundedBrand.image);
-    foundedBrand.destroy();
+    const brand = await this.brandRepository.findOne({ where: { id } });
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+
+    if (brand.image) {
+      await this.fileService.deleteFile(brand.image);
+    }
+
+    await this.brandRepository.remove(brand);
+
     return {
-      message: 'Brand deleted Successfully',
+      message: 'Brand deleted successfully',
     };
   }
 }
+

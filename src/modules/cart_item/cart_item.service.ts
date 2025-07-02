@@ -1,47 +1,58 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CartItem } from './models';
-import { CreateCartItemDto } from './dto';
-import { UpdateCartItemDto } from './dto';
-import { Attributes } from 'sequelize';
-import { Cart } from '../cart/models';
-import { Product } from '../product';
 import { User } from '../user';
+import { Product } from '../product';
+import { CreateCartItemDto, UpdateCartItemDto } from './dto';
+
+
+
 
 @Injectable()
 export class CartItemService {
-  constructor(@InjectModel(CartItem) private readonly cartItemModel: typeof CartItem) {}
+  constructor(
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+  ) {}
 
   async create(createCartItemDto: CreateCartItemDto): Promise<CartItem> {
-    return this.cartItemModel.create(createCartItemDto as Attributes<CartItem>);
+    const cartItem = this.cartItemRepository.create(createCartItemDto);
+    return this.cartItemRepository.save(cartItem);
   }
 
   async findAll(): Promise<CartItem[]> {
-    return this.cartItemModel.findAll(
-      {include: [
-                { model: User},
-                { model: Product },
-              ]}
-    );
-
-    return this.cartItemModel.findAll();
+    return this.cartItemRepository.find({
+      relations: ['user', 'product'],
+    });
   }
 
   async findOne(id: number): Promise<CartItem> {
-    const cartItem = await this.cartItemModel.findByPk(id);
+    const cartItem = await this.cartItemRepository.findOne({
+      where: { id },
+      relations: ['user', 'product'],
+    });
     if (!cartItem) {
       throw new NotFoundException(`CartItem with ID ${id} not found.`);
     }
     return cartItem;
   }
 
-  async update(id: number, updateCartItemDto: UpdateCartItemDto): Promise<CartItem> {
+  async update(
+    id: number,
+    updateCartItemDto: UpdateCartItemDto,
+  ): Promise<CartItem> {
     const cartItem = await this.findOne(id);
-    return cartItem.update(updateCartItemDto as Attributes<CartItem>);
+    Object.assign(cartItem, updateCartItemDto);
+    return this.cartItemRepository.save(cartItem);
   }
 
   async delete(id: number): Promise<void> {
     const cartItem = await this.findOne(id);
-    await cartItem.destroy();
+    await this.cartItemRepository.remove(cartItem);
   }
 }

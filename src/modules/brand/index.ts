@@ -1,6 +1,6 @@
-export * from "./models"
 export  * from "./dto"
 export * from "./interfaces"
+export * from "./models"
 export * from "./brand.controller"
 export * from "./brand.service"
 export * from "./brand.module"

@@ -28,12 +28,20 @@ export class CartController {
         return this.service.getSingleCart(+id);
     }
 
+    // @Protected(true)
+    // @Roles([UserRoles.admin, UserRoles.user])
+    // @Post('/add')
+    // @ApiOperation({ summary: "Create a new cart" })
+    // async createCart(@Body() payload: CreateCartDto) {
+    //     return this.service.createCart(payload);
+    // }
+
     @Protected(true)
     @Roles([UserRoles.admin, UserRoles.user])
     @Post('/add')
     @ApiOperation({ summary: "Create a new cart" })
-    async createCart(@Body() payload: CreateCartDto) {
-        return this.service.createCart(payload);
+    async createCart() {
+        return this.service.createCart();
     }
 
     @Protected(true)

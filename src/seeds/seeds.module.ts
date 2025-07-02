@@ -1,9 +1,26 @@
-import { Module } from "@nestjs/common"
-import { SeedsService } from "./seeds.service";
-import { SequelizeModule } from "@nestjs/sequelize";
-import { Banner, Brand, Category, Color, Product, ProductItem, User } from "@modules";
+import { Module } from '@nestjs/common';
+import { SeedsService } from './seeds.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  User,
+  Category,
+  Product,
+  Brand,
+  Banner,
+  ProductItem,
+  Color,
+} from '@modules';
+
 @Module({
-    imports: [SequelizeModule.forFeature([User,Category,Product,Brand,Banner,ProductItem,Color])],
-    providers: [SeedsService]
+  imports: [TypeOrmModule.forFeature([
+    User,
+    Category,
+    Product,
+    Brand,
+    Banner,
+    ProductItem,
+    Color,
+  ])],
+  providers: [SeedsService],
 })
-export class SeedsModule { }
+export class SeedsModule {}

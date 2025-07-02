@@ -1,22 +1,24 @@
-export const regionSeedData = [
-    {
-      region_id: null,
-      name: 'Toshkent Viloyati',
-      type: 'REGION',
-    },
-    {
-      region_id: null,
-      name: 'Toshkent shahri',
-      type: 'CITY',
-    },
-    {
-      region_id: 2,
-      name: 'Uchtepa tumani',
-      type: 'DISTRICT',
-    },
-    {
-      region_id: 2,
-      name: 'Chilonzor tumani',
-      type: 'DISTRICT',
-    },
-  ];
+import { Region } from './entity';
+
+export const regionSeedData: Partial<Region>[] = [
+  {
+    name: 'Toshkent Viloyati',
+    type: 'REGION',
+    parent: null,
+  },
+  {
+    name: 'Toshkent shahri',
+    type: 'CITY',
+    parent: null,
+  },
+  {
+    name: 'Uchtepa tumani',
+    type: 'DISTRICT',
+    parent: { id: 2 } as Region, // TypeORM expects object for relation
+  },
+  {
+    name: 'Chilonzor tumani',
+    type: 'DISTRICT',
+    parent: { id: 2 } as Region,
+  },
+];

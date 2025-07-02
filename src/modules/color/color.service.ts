@@ -1,26 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { Color } from './models/color.model';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Color } from './models';
 import { CreateColorDto } from './dto/create-color.dto';
 import { UpdateColorDto } from './dto/update-color.dto';
 
 @Injectable()
 export class ColorService {
   constructor(
-    @InjectModel(Color)
-    private colorModel: typeof Color,
+    @InjectRepository(Color)
+    private readonly colorRepository: Repository<Color>,
   ) {}
 
   async create(createColorDto: CreateColorDto): Promise<Color> {
-    return this.colorModel.create({ ...createColorDto });
+    const color = this.colorRepository.create(createColorDto);
+    return this.colorRepository.save(color);
   }
 
   async findAll(): Promise<Color[]> {
-    return this.colorModel.findAll();
+    return this.colorRepository.find();
   }
 
   async findOne(id: number): Promise<Color> {
-    const color = await this.colorModel.findByPk(id);
+    const color = await this.colorRepository.findOne({ where: { id } });
     if (!color) {
       throw new NotFoundException(`Color with ID ${id} not found`);
     }
@@ -29,12 +31,12 @@ export class ColorService {
 
   async update(id: number, updateColorDto: UpdateColorDto): Promise<Color> {
     const color = await this.findOne(id);
-    await color.update(updateColorDto);
-    return color;
+    const updated = this.colorRepository.merge(color, updateColorDto);
+    return this.colorRepository.save(updated);
   }
 
   async remove(id: number): Promise<void> {
     const color = await this.findOne(id);
-    await color.destroy();
+    await this.colorRepository.remove(color);
   }
 }

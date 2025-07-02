@@ -1,36 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, ILike } from 'typeorm';
+import { FileService } from '../file';
 import { CreateCategoryDto } from './dtos/create-category.dto';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
-import { InjectModel } from '@nestjs/sequelize';
 import { Category } from './models';
-import { CreateCategoryRequest, UpdateCategoryRequest } from './interfaces';
-import { FileService } from '../file';
-import { Product } from '../product';
-import { Op } from 'sequelize';
 
 @Injectable()
 export class CategoryService {
   constructor(
-    @InjectModel(Category) private categoryModel: typeof Category,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
     private fileService: FileService,
   ) {}
 
-  async getAllCategories(depth: number = 2, limit: number = 7): Promise<Category[]> {
-    return await this.categoryModel.findAll({
-        include: this.buildCategoryTree(depth),
-        limit: limit
+  async getAllCategories(depth = 2, limit = 7): Promise<Category[]> {
+    return await this.categoryRepository.find({
+      relations: this.buildCategoryTree(depth),
+      take: limit,
     });
-}
+  }
 
-  
-  private buildCategoryTree(depth: number): any[] {
+  private buildCategoryTree(depth: number): string[] {
     if (depth === 0) return [];
     return [
-      {
-        model: Category,
-        as: 'subCategories',
-        include: this.buildCategoryTree(depth - 1),
-      },
+      'subCategories',
+      ...this.buildCategoryTree(depth - 1).map((r) => `subCategories.${r}`),
     ];
   }
 
@@ -40,97 +35,104 @@ export class CategoryService {
     iconFile: Express.Multer.File,
   ): Promise<{ message: string; category: Category }> {
     if (payload.parentCategoryId) {
-      const parentCategory = await this.categoryModel.findByPk(payload.parentCategoryId);
+      const parentCategory = await this.categoryRepository.findOne({
+        where: { id: payload.parentCategoryId },
+      });
       if (!parentCategory) {
-        throw new Error(`Parent Category with id ${payload.parentCategoryId} not found`);
+        throw new Error(
+          `Parent Category with id ${payload.parentCategoryId} not found`,
+        );
       }
     }
-  
+
     const image = await this.fileService.uploadFile(imageFile);
     const icon = await this.fileService.uploadFile(iconFile);
-  
-    const category = await this.categoryModel.create({
+
+    const category = this.categoryRepository.create({
       name: payload.name,
       image,
       icon,
-      parentCategoryId: payload.parentCategoryId || null,
+      parentCategory: payload.parentCategoryId
+        ? { id: payload.parentCategoryId }
+        : null,
     });
+
+    await this.categoryRepository.save(category);
+
     return {
       message: 'Category Created Successfully',
-      category: category,
+      category,
     };
   }
 
   async findByName(name: string): Promise<Category[]> {
-    return this.categoryModel.findAll({
-      where: {
-        name: {
-          [Op.iLike]: `%${name}%`,
-        },
-      },
+    return this.categoryRepository.find({
+      where: { name: ILike(`%${name}%`) },
     });
   }
 
-async getOneCategory(id: number): Promise<Category> {
-  return await this.categoryModel.findOne({
-    where: { id },
-    include: [
-      { model: Product },
-      { model: Category, as: 'subCategories' },
-    ],
-  });
-}
-
-
-async updateCategory(
-  id: number,
-  payload: UpdateCategoryDto,
-  imageFile?: Express.Multer.File,
-  iconFile?: Express.Multer.File,
-): Promise<{ message: string; updatedCategory: Category }> {
-  const category = await this.categoryModel.findOne({ where: { id } });
-
-  if (!category) {
-    throw new Error(`Category with id ${id} not found`);
+  async getOneCategory(id: number): Promise<Category> {
+    return await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['products', 'subCategories'],
+    });
   }
 
-  if (payload.parentCategoryId) {
-    const parentCategory = await this.categoryModel.findByPk(payload.parentCategoryId);
-    if (!parentCategory) {
-      throw new Error(`Parent Category with id ${payload.parentCategoryId} not found`);
+  async updateCategory(
+    id: number,
+    payload: UpdateCategoryDto,
+    imageFile?: Express.Multer.File,
+    iconFile?: Express.Multer.File,
+  ): Promise<{ message: string; updatedCategory: Category }> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
+
+    if (!category) {
+      throw new Error(`Category with id ${id} not found`);
     }
-  }
 
-  if (imageFile) {
-    const newImage = await this.fileService.uploadFile(imageFile);
-    if (category.image) {
-      await this.fileService.deleteFile(category.image);
+    if (payload.parentCategoryId) {
+      const parentCategory = await this.categoryRepository.findOne({
+        where: { id: payload.parentCategoryId },
+      });
+      if (!parentCategory) {
+        throw new Error(
+          `Parent Category with id ${payload.parentCategoryId} not found`,
+        );
+      }
+      category.parentCategory = parentCategory;
     }
-    payload.image = newImage;
-  }
 
-  if (iconFile) {
-    const newIcon = await this.fileService.uploadFile(iconFile);
-    if (category.icon) {
-      await this.fileService.deleteFile(category.icon);
+    if (imageFile) {
+      const newImage = await this.fileService.uploadFile(imageFile);
+      if (category.image) {
+        await this.fileService.deleteFile(category.image);
+      }
+      category.image = newImage;
     }
-    payload.icon = newIcon;
+
+    if (iconFile) {
+      const newIcon = await this.fileService.uploadFile(iconFile);
+      if (category.icon) {
+        await this.fileService.deleteFile(category.icon);
+      }
+      category.icon = newIcon;
+    }
+
+    Object.assign(category, payload);
+    const updatedCategory = await this.categoryRepository.save(category);
+
+    return {
+      message: 'Category updated successfully',
+      updatedCategory,
+    };
   }
 
-  await this.categoryModel.update(payload, { where: { id } });
-
-  const updatedCategory = await this.categoryModel.findOne({ where: { id } });
-
-  return {
-    message: 'Category updated successfully',
-    updatedCategory,
-  };
-}
   async deleteCategory(id: number): Promise<void> {
-    const foundedCategory = await this.categoryModel.findByPk(id);
+    const category = await this.categoryRepository.findOne({ where: { id } });
 
-    foundedCategory.destroy();
-    await this.fileService.deleteFile(foundedCategory?.image);
-    await this.fileService.deleteFile(foundedCategory?.icon);
+    if (category.image) await this.fileService.deleteFile(category.image);
+    if (category.icon) await this.fileService.deleteFile(category.icon);
+
+    await this.categoryRepository.remove(category);
   }
 }

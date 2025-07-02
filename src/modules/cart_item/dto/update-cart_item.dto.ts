@@ -3,7 +3,7 @@ import { CartItem } from '../models';
 import { IsNotEmpty, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateCartItemDto implements Partial<Attributes<CartItem>> {
+export class UpdateCartItemDto {
   @ApiProperty({
     description: 'The ID of the cart',
     example: 1,

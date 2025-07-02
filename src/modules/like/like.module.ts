@@ -1,15 +1,18 @@
-import { forwardRef, Module } from "@nestjs/common";
-import { SequelizeModule } from "@nestjs/sequelize";
-import { Like } from "./models";
-import { LikeService } from "./like.service";
-import { LikeController } from "./like.controller";
-import { ProductModule } from "../product";
+import { forwardRef, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { LikeService } from './like.service';
+import { LikeController } from './like.controller';
+import { Like } from './models';
+// import { Product } from '../product/models/product.model';
+import { ProductModule } from '../product';
 
 @Module({
-    imports: [SequelizeModule.forFeature([Like]), forwardRef(() => ProductModule)],
-    controllers: [LikeController],
-    providers: [LikeService],
-    exports: [LikeService],
+  imports: [
+    TypeOrmModule.forFeature([Like]),
+    forwardRef(() => ProductModule)
+  ],
+  controllers: [LikeController],
+  providers: [LikeService],
+  exports: [LikeService],
 })
-
-export class LikeModule { }
+export class LikeModule {}

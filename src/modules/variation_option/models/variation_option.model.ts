@@ -1,19 +1,29 @@
-import { Table, Model, Column, DataType, HasMany, ForeignKey, BelongsTo } from "sequelize-typescript";
-import { ProductConfiguration } from "src/modules/product_configuration";
-import { Variation } from "src/modules/variation";
+import { ProductConfiguration } from 'src/modules/product_configuration';
+import { Variation } from 'src/modules/variation/models';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 
-@Table({ tableName: 'variation_option', timestamps: true })
-export class VariationOption extends Model {
-    @ForeignKey(() => Variation)
-    @Column({ type: DataType.BIGINT, allowNull: false })
-    variation_id: number;
+@Entity({ name: 'variation_option' })
+export class VariationOption {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: DataType.STRING, allowNull: false })
-    value: string;
+  @Column({ type: 'varchar', nullable: false })
+  value: string;
 
-    @HasMany(() => ProductConfiguration)
-    configurations: ProductConfiguration[];
+  @ManyToOne(() => Variation, (variation) => variation.options, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'variation_id' })
+  variation: Variation;
 
-    @BelongsTo(() => Variation)
-    variation: Variation;
+  @OneToMany(() => ProductConfiguration, (config) => config.variationOption)
+  configurations: ProductConfiguration[];
 }

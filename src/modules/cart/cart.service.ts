@@ -1,64 +1,63 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/sequelize";
-import { Cart } from "./models";
-import { CreateCartDto, UpdateCartDto } from "./dtos";
-import { User } from "../user";
-import { Product } from "../product";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Cart } from './models';
+import { CreateCartDto, UpdateCartDto } from './dtos';
 
 @Injectable()
 export class CartService {
-    constructor(@InjectModel(Cart) private cartModel: typeof Cart) { }
+  constructor(
+    @InjectRepository(Cart)
+    private cartRepository: Repository<Cart>,
+  ) {}
 
-    async getAllCarts(): Promise<Cart[]> {
-        return await this.cartModel.findAll({
-            include: [
-                { model: User },
-                { model: Product },
-            ]
-        })
-    }
+  async getAllCarts(): Promise<Cart[]> {
+    return await this.cartRepository.find({
+      relations: ['cart_items'], // agar cart_items degan relation mavjud bo‘lsa
+    });
+  }
 
-    async getSingleCart(id: number): Promise<Cart> {
-        return this.cartModel.findOne({
-            where: { id },
-            include: [
-                { model: User },
-                { model: Product },
-            ]
-        })
-    }
+  async getSingleCart(id: number): Promise<Cart> {
+    const cart = await this.cartRepository.findOne({
+      where: { id },
+      relations: ['cart_items'], // agar kerak bo‘lsa
+    });
+    if (!cart) throw new NotFoundException(`Cart with ID ${id} not found`);
+    return cart;
+  }
 
-    async createCart(payload: CreateCartDto): Promise<{ message: string; new_cart: Cart }> {
-        const new_cart = await this.cartModel.create({
-            user_id: payload.user_id,
-            product_id: payload.product_id,
-        })
+  async createCart(): Promise<{ message: string; new_cart: Cart }> {
+    const new_cart = this.cartRepository.create(); // hech qanday payload kerak emas
+    await this.cartRepository.save(new_cart);
 
-        return {
-            message: "Cart created successfully!",
-            new_cart
-        }
-    }
+    return {
+      message: 'Cart created successfully!',
+      new_cart,
+    };
+  }
 
-    async updateCart(id: number, payload: UpdateCartDto): Promise<{ message: string, updatedCart: Cart }> {
-        await this.cartModel.update(payload, { where: { id } })
+  async updateCart(
+    id: number,
+    _payload: UpdateCartDto,
+  ): Promise<{ message: string; updatedCart: Cart }> {
+    const cart = await this.cartRepository.findOneBy({ id });
+    if (!cart) throw new NotFoundException(`Cart with ID ${id} not found`);
 
-        const updatedCart = await this.cartModel.findOne({ where: { id } })
+    // hozircha payloadga mos property yo‘q, shunchaki saqlaymiz
+    await this.cartRepository.save(cart);
 
-        if (!updatedCart) throw new Error(`Cart with ID ${id} not found`);
+    return {
+      message: 'Cart updated successfully',
+      updatedCart: cart,
+    };
+  }
 
-        return {
-            message: "Cart updated successfully",
-            updatedCart
-        }
-    }
-
-    async deleteCart(id: number): Promise<{ message: string }> {
-        const cart = await this.cartModel.findByPk(id)
-        if (!cart) return { message: `${id} raqamli Cart topilmadi!!!` }
-        await cart.destroy()
-        return {
-            message: "Cart deleted successfully"
-        }
-    }
+  async deleteCart(id: number): Promise<{ message: string }> {
+    const cart = await this.cartRepository.findOneBy({ id });
+    if (!cart) return { message: `${id} raqamli Cart topilmadi!!!` };
+    await this.cartRepository.remove(cart);
+    return {
+      message: 'Cart deleted successfully',
+    };
+  }
 }

@@ -1,14 +1,30 @@
-import { Table, Model, Column, DataType, HasMany } from 'sequelize-typescript';
 import { ProductItem } from 'src/modules/product_item';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 
-@Table({ tableName: 'color', timestamps: true })
-export class Color extends Model {
-  @Column({ type: DataType.STRING, allowNull: false })
+@Entity('color')
+export class Color {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'varchar', nullable: false })
   name: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: 'varchar', nullable: false })
   color_code: string;
 
-  @HasMany(() => ProductItem)
+  @OneToMany(() => ProductItem, productItem => productItem.color)
   product_item: ProductItem[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

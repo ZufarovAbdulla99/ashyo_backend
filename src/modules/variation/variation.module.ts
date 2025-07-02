@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { Variation } from './models';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { VariationService } from './variation.service';
 import { VariationController } from './variation.controller';
+import { Variation } from './models';
+import { Category } from '../category';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Variation])],
+  imports: [TypeOrmModule.forFeature([Variation, Category])],
   controllers: [VariationController],
   providers: [VariationService],
   exports: [VariationService],
 })
 export class VariationModule {}
+

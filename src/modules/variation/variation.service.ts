@@ -1,38 +1,86 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Variation } from './models';
+import { Category } from '../category';
 import { CreateVariationDto } from './dto/create-variation.dto';
 import { UpdateVariationDto } from './dto/update-variation.dto';
-import { Attributes } from 'sequelize';
-import { Category } from '../category';
 
 @Injectable()
 export class VariationService {
-  constructor(@InjectModel(Variation) private readonly variationModel: typeof Variation) {}
+  constructor(
+    @InjectRepository(Variation)
+    private readonly variationRepo: Repository<Variation>,
+
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
+  ) {}
 
   async create(createVariationDto: CreateVariationDto): Promise<Variation> {
-    return this.variationModel.create(createVariationDto as Attributes<Variation>);
+    const category = await this.categoryRepo.findOne({
+      where: { id: createVariationDto.category_id },
+    });
+
+    if (!category) {
+      throw new NotFoundException(
+        `Category with ID ${createVariationDto.category_id} not found.`,
+      );
+    }
+
+    const variation = this.variationRepo.create({
+      ...createVariationDto,
+      category,
+    });
+
+    return this.variationRepo.save(variation);
   }
 
   async findAll(): Promise<Variation[]> {
-    return this.variationModel.findAll({ include: [{ model:Category }] });
+    return this.variationRepo.find({
+      relations: ['category'],
+    });
   }
 
   async findOne(id: number): Promise<Variation> {
-    const variation = await this.variationModel.findByPk(id, { include: [{ all: true }] });
+    const variation = await this.variationRepo.findOne({
+      where: { id },
+      relations: ['category'],
+    });
+
     if (!variation) {
       throw new NotFoundException(`Variation with ID ${id} not found.`);
     }
+
     return variation;
   }
 
-  async update(id: number, updateVariationDto: UpdateVariationDto): Promise<Variation> {
+  async update(
+    id: number,
+    updateVariationDto: UpdateVariationDto,
+  ): Promise<Variation> {
     const variation = await this.findOne(id);
-    return variation.update(updateVariationDto as Attributes<Variation>);
+
+    if (updateVariationDto.category_id) {
+      const category = await this.categoryRepo.findOne({
+        where: { id: updateVariationDto.category_id },
+      });
+
+      if (!category) {
+        throw new NotFoundException(
+          `Category with ID ${updateVariationDto.category_id} not found.`,
+        );
+      }
+
+      variation.category = category;
+    }
+
+    Object.assign(variation, updateVariationDto);
+
+    return this.variationRepo.save(variation);
   }
 
   async delete(id: number): Promise<void> {
     const variation = await this.findOne(id);
-    await variation.destroy();
+    await this.variationRepo.remove(variation);
   }
 }

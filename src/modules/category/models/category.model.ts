@@ -1,67 +1,48 @@
-// import {
-//   Table,
-//   Model,
-//   Column,
-//   DataType,
-//   HasMany,
-
-// } from 'sequelize-typescript';
-// import { Product } from 'src/modules/product';
-
-// @Table({ tableName: 'categories', timestamps: true})
-// export class Category extends Model{
-//   @Column({type: DataType.INTEGER, primaryKey: true, autoIncrement: true})
-//   id: number;
-  
-//   @Column({type: DataType.TEXT, allowNull: false, unique: true})
-//   name: string;
-  
-//   @Column({type: DataType.TEXT, allowNull: false})
-//   image: string;
-  
-//   @Column({type: DataType.TEXT, allowNull: false})
-//   icon: string;
-
-//   @HasMany(() => Product)
-//   product: Product[];
-// }
-
-
-import {
-  Table,
-  Model,
-  Column,
-  DataType,
-  HasMany,
-  BelongsTo,
-  ForeignKey,
-} from 'sequelize-typescript';
+import { Banner } from 'src/modules/banner';
 import { Product } from 'src/modules/product';
+import { Variation } from 'src/modules/variation';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
-@Table({ tableName: 'categories', timestamps: true })
-export class Category extends Model {
-  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+@Entity({ name: 'categories' })
+export class Category {
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: DataType.TEXT, allowNull: false, unique: true })
+  @Column({ type: 'text', unique: true })
   name: string;
 
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @Column({ type: 'text' })
   image: string;
 
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @Column({ type: 'text' })
   icon: string;
 
-  @ForeignKey(() => Category)
-  @Column({ type: DataType.INTEGER, allowNull: true })
+  @Column({ type: 'int', nullable: true })
   parentCategoryId: number;
 
-  @BelongsTo(() => Category, { foreignKey: 'parentCategoryId' })
+  @ManyToOne(() => Category, (category) => category.subCategories, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'parentCategoryId' })
   parentCategory: Category;
 
-  @HasMany(() => Category, { foreignKey: 'parentCategoryId' })
+  @OneToMany(() => Category, (category) => category.parentCategory)
   subCategories: Category[];
 
-  @HasMany(() => Product)
+  @OneToMany(() => Product, (product) => product.category)
   products: Product[];
+
+  @OneToMany(() => Variation, (variation) => variation.category)
+  variations: Variation[];
+
+  @OneToMany(() => Banner, (banner) => banner.category)
+  banners: Banner[];
 }

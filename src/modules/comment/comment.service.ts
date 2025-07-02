@@ -1,54 +1,64 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/sequelize";
-import { Comment } from "./models";
-import { CreateCommentDto, UpdateCommentDto } from "./dtos";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Comment } from './models';
+import { Repository } from 'typeorm';
+import { CreateCommentDto, UpdateCommentDto } from './dtos';
 
 @Injectable()
 export class CommentService {
-    constructor(@InjectModel(Comment) private commentModel: typeof Comment) { }
+  constructor(
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+  ) {}
 
-    async getAllComments(): Promise<Comment[]> {
-        return await this.commentModel.findAll()
+  async getAllComments(): Promise<Comment[]> {
+    return await this.commentRepository.find();
+  }
+
+  async getSingleComment(id: number): Promise<Comment> {
+    const comment = await this.commentRepository.findOne({ where: { id } });
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID ${id} not found`);
     }
+    return comment;
+  }
 
-    async getSingleComment(id: number): Promise<Comment> {
-        return this.commentModel.findOne({
-            where: { id }
-        })
-    }
+  async createComment(
+    payload: CreateCommentDto,
+  ): Promise<{ message: string; new_comment: Comment }> {
+    const new_comment = this.commentRepository.create({
+      text: payload.text,
+      user_id: payload.user_id,
+      product_id: payload.product_id,
+    });
+    await this.commentRepository.save(new_comment);
 
-    async createComment(payload: CreateCommentDto): Promise<{ message: string; new_comment: Comment }> {
-        const new_comment = await this.commentModel.create({
-            text: payload.text,
-            user_id: payload.user_id,
-            product_id: payload.product_id
-        })
+    return {
+      message: 'Comment created successfully!',
+      new_comment,
+    };
+  }
 
-        return {
-            message: "Comment created successfully!",
-            new_comment
-        }
-    }
+  async updateComment(
+    id: number,
+    payload: UpdateCommentDto,
+  ): Promise<{ message: string; updatedComment: Comment }> {
+    const comment = await this.getSingleComment(id);
+    const updatedComment = this.commentRepository.merge(comment, payload);
+    await this.commentRepository.save(updatedComment);
 
-    async updateComment(id: number, payload: UpdateCommentDto): Promise<{ message: string, updatedComment: Comment }> {
-        await this.commentModel.update(payload, { where: { id } })
+    return {
+      message: 'Comment updated successfully',
+      updatedComment,
+    };
+  }
 
-        const updatedComment = await this.commentModel.findOne({ where: { id } })
+  async deleteComment(id: number): Promise<{ message: string }> {
+    const comment = await this.getSingleComment(id);
+    await this.commentRepository.remove(comment);
 
-        if (!updatedComment) throw new Error(`Comment with ID ${id} not found`);
-
-        return {
-            message: "Comment updated successfully",
-            updatedComment
-        }
-    }
-
-    async deleteComment(id: number): Promise<{ message: string }> {
-        const comment = await this.commentModel.findByPk(id)
-        if (!comment) return { message: `${id} raqamli Comment topilmadi!!!` }
-        await comment.destroy()
-        return {
-            message: "Comment deleted successfully"
-        }
-    }
+    return {
+      message: 'Comment deleted successfully',
+    };
+  }
 }

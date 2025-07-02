@@ -1,22 +1,51 @@
-import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from "sequelize-typescript";
-import { ProductItem } from "src/modules/product_item";
-import { VariationOption } from "src/modules/variation_option";
+import { ProductItem } from 'src/modules/product_item';
+import { VariationOption } from 'src/modules/variation_option';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
+@Entity('product_configuration')
+export class ProductConfiguration {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-@Table({ tableName: 'product_configuration', timestamps: true })
-export class ProductConfiguration extends Model {
-    @ForeignKey(() => ProductItem)
-    @Column({ type: DataType.BIGINT, allowNull: false })
-    product_item_id: number;
+  @Column()
+  product_item_id: number;
 
-    @BelongsTo(() => ProductItem)
-    productItem: ProductItem;
+  @ManyToOne(
+    () => ProductItem,
+    (productItem) => productItem.configurations,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
+  @JoinColumn({ name: 'product_item_id' })
+  productItem: ProductItem;
 
-    @ForeignKey(() => VariationOption)
-    @Column({ type: DataType.BIGINT, allowNull: false })
-    variation_option_id: number;
+  @Column()
+  variation_option_id: number;
 
-    @BelongsTo(() => VariationOption)
-    variationOption: VariationOption;
+  @ManyToOne(
+    () => VariationOption,
+    (variationOption) => variationOption.configurations,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
+  @JoinColumn({ name: 'variation_option_id' })
+  variationOption: VariationOption;
 
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

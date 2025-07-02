@@ -1,34 +1,56 @@
-// src/banner/banner.model.ts
-import { Table, Model, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+// src/banner/banner.entity.ts
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Category } from 'src/modules/category';
 import { Product } from 'src/modules/product';
 
+@Entity('banner')
+export class Banner {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-@Table({ tableName: 'banner', timestamps: true })
-export class Banner extends Model {
-  @ForeignKey(() => Product)  // Foreign key for the product
-  @Column({ type: DataType.INTEGER, allowNull: true })
+  @Column({ type: 'int', nullable: true })
   product_id: number;
 
-  @ForeignKey(() => Category)
-  @Column({ type: DataType.INTEGER, allowNull: true })
+  @Column({ type: 'int', nullable: true })
   category_id: number;
 
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({ type: 'varchar', length: '255', nullable: true })
   title: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: 'text', nullable: false })
   description: string;
 
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({ type: 'varchar', nullable: true })
   image: string;
 
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({ type: 'varchar', nullable: true })
   name: string;
 
-  @BelongsTo(() => Product)
+  @ManyToOne(() => Product, (product) => product.banners, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @BelongsTo(() => Category)
+  @ManyToOne(() => Category, (category) => category.banners, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

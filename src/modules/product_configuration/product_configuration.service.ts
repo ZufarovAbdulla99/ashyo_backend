@@ -1,48 +1,58 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { CreateProductConfigurationDto } from './dto';
-import {UpdateProductConfigurationDto} from './dto'
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  CreateProductConfigurationDto,
+  UpdateProductConfigurationDto,
+} from './dto';
 import { ProductConfiguration } from './models';
-import { ProductItem } from '../product_item';
-import { Product } from '../product/models';
-import { VariationOption } from '../variation_option';
 
 @Injectable()
 export class ProductConfigurationService {
-    constructor(
-        @InjectModel(ProductConfiguration)
-        private readonly productConfigurationModel: typeof ProductConfiguration,
-    ) {}
+  constructor(
+    @InjectRepository(ProductConfiguration)
+    private readonly productConfigurationRepository: Repository<ProductConfiguration>,
+  ) {}
 
-    async create(dto: CreateProductConfigurationDto): Promise<ProductConfiguration> {
-        return this.productConfigurationModel.create(dto as any);
-    }
-
-    async findAll(): Promise<ProductConfiguration[]> {
-      return this.productConfigurationModel.findAll({
-        include: [
-          { model: ProductItem},
-          { model: VariationOption },
-        ]
-      });
+  async create(
+    dto: CreateProductConfigurationDto,
+  ): Promise<ProductConfiguration> {
+    const newConfig = this.productConfigurationRepository.create(dto);
+    return this.productConfigurationRepository.save(newConfig);
   }
-  
 
-    async findOne(id: number): Promise<ProductConfiguration> {
-        const productConfiguration = await this.productConfigurationModel.findByPk(id, { include: { all: true } });
-        if (!productConfiguration) {
-            throw new NotFoundException(`ProductConfiguration with ID ${id} not found.`);
-        }
-        return productConfiguration;
+  async findAll(): Promise<ProductConfiguration[]> {
+    return this.productConfigurationRepository.find({
+      relations: ['productItem', 'variationOption'],
+    });
+  }
+
+  async findOne(id: number): Promise<ProductConfiguration> {
+    const config = await this.productConfigurationRepository.findOne({
+      where: { id },
+      relations: ['productItem', 'variationOption'],
+    });
+
+    if (!config) {
+      throw new NotFoundException(
+        `ProductConfiguration with ID ${id} not found.`,
+      );
     }
 
-    async update(id: number, dto: UpdateProductConfigurationDto): Promise<ProductConfiguration> {
-        const productConfiguration = await this.findOne(id);
-        return productConfiguration.update(dto);
-    }
+    return config;
+  }
 
-    async remove(id: number): Promise<void> {
-        const productConfiguration = await this.findOne(id);
-        await productConfiguration.destroy();
-    }
+  async update(
+    id: number,
+    dto: UpdateProductConfigurationDto,
+  ): Promise<ProductConfiguration> {
+    const config = await this.findOne(id);
+    const updated = this.productConfigurationRepository.merge(config, dto);
+    return this.productConfigurationRepository.save(updated);
+  }
+
+  async remove(id: number): Promise<void> {
+    const config = await this.findOne(id);
+    await this.productConfigurationRepository.remove(config);
+  }
 }

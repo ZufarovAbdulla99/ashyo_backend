@@ -1,13 +1,30 @@
-import { Column, DataType, Model, Table } from "sequelize-typescript";
+import { Product } from 'src/modules/product';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 
-@Table({ tableName: 'brands', timestamps: true })
-export class Brand extends Model {
-    @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
-    id: number;
+@Entity({ name: 'brands' })
+export class Brand {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: DataType.TEXT, allowNull: false, unique: true })
-    name: string;
+  @Column({ type: 'text', unique: true })
+  name: string;
 
-    @Column({ type: DataType.TEXT, allowNull: false })
-    image: string
+  @Column({ type: 'text' })
+  image: string;
+
+  @OneToMany(() => Product, (product) => product.brand)
+  products: Product[];
+
+  @CreateDateColumn({ name: 'createdAt' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updatedAt' })
+  updatedAt: Date;
 }

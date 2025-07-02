@@ -1,13 +1,16 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Table({ tableName: 'contacts', timestamps: false })
-export class Contact extends Model {
-    @Column({ type: DataType.STRING, allowNull: false })
-    name: string;
+@Entity('contacts')
+export class Contact {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: DataType.STRING, allowNull: false })
-    email: string;
+  @Column({ type: 'varchar', nullable: false })
+  name: string;
 
-    @Column({ type: DataType.TEXT, allowNull: false })
-    message: string;
+  @Column({ type: 'varchar', nullable: false })
+  email: string;
+
+  @Column({ type: 'text', nullable: false })
+  message: string;
 }

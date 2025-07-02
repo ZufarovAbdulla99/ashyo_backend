@@ -1,13 +1,16 @@
-// src/modules/cart-item/cart-item.module.ts
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartItem } from './models';
-import { CartItemService } from './cart_item.service';
+import { User } from '../user';
+import { Product } from '../product';
 import { CartItemController } from './cart_item.controller';
+import { CartItemService } from './cart_item.service';
+
 
 @Module({
-  imports: [SequelizeModule.forFeature([CartItem])],
+  imports: [TypeOrmModule.forFeature([CartItem, User, Product])],
   controllers: [CartItemController],
   providers: [CartItemService],
 })
 export class CartItemModule {}
+

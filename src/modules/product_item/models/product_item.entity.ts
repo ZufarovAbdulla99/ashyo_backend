@@ -1,38 +1,54 @@
 import {
-  Table,
-  Model,
+  Entity,
+  PrimaryGeneratedColumn,
   Column,
-  DataType,
-  HasMany,
-  ForeignKey,
-  BelongsTo,
-} from 'sequelize-typescript';
-import { ProductConfiguration } from 'src/modules/product_configuration';
-import { Product } from 'src/modules/product/models/product.model';
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { Color } from 'src/modules/color';
+import { Product } from 'src/modules/product/models';
+import { ProductConfiguration } from 'src/modules/product_configuration';
+import { OrderItems } from 'src/modules/order_items';
 
-@Table({ tableName: 'product_item', timestamps: true })
-export class ProductItem extends Model {
-  @Column({ type: DataType.BIGINT, allowNull: false })
+@Entity('product_item')
+export class ProductItem {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'bigint' })
   price: number;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: 'varchar' })
   image: string;
 
-  @HasMany(() => ProductConfiguration)
-  configurations: ProductConfiguration[];
-
-  @ForeignKey(() => Product)
-  @Column({ type: DataType.BIGINT, allowNull: false })
-  product_id: number;
-
-  @BelongsTo(() => Product)
+  @ManyToOne(() => Product, (product) => product.product_item, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ForeignKey(() => Color)
-  @Column({ type: DataType.BIGINT, allowNull: false })
+  @Column()
+  product_id: number;
+
+  @ManyToOne(() => Color, (color) => color.product_item, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'color_id' })
+  color: Color;
+
+  @Column()
   color_id: number;
 
-  @BelongsTo(() => Color)
-  color: Color;
+  @OneToMany(() => OrderItems, (orderItem) => orderItem.product_item)
+  order_items: OrderItems[];
+
+  @OneToMany(
+    () => ProductConfiguration,
+    (configuration) => configuration.productItem,
+    { cascade: true },
+  )
+  configurations: ProductConfiguration[];
 }

@@ -1,180 +1,141 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { Product } from './models';
-import { FileService } from '../file';
-import { CreateProductDto } from './dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Product } from './models/product.model';
+import { Repository, ILike, Between } from 'typeorm';
+import { FileService } from '../file/file.service';
+import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductRequest } from './interfaces/update-product.interface';
-import { Op } from 'sequelize';
-import { ProductFilterDto } from './interfaces';
-import { Like, LikeService } from '../like';
-import { Comment } from '../comment';
-import { Category } from '../category';
+import { ProductFilterDto } from './interfaces/product-filer.interface';
+import { Category } from '../category/models/category.model';
 import { PaginatedResponse } from './interfaces/paginate-product.interface';
-import { ProductItem } from '../product_item';
-import { Variation } from '../variation';
-import { VariationOption } from '../variation_option';
-import { ProductConfiguration } from '../product_configuration';
+import { ProductItem } from '../product_item/models/product_item.entity';
+import { VariationOption } from '../variation_option/models/variation_option.model';
+import { ProductConfiguration } from '../product_configuration/models/product_configuration.model';
+import { Like } from '../like/models/like.model';
+import { LikeService } from '../like/like.service';
 
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectModel(Product)
-    private readonly productModel: typeof Product,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+    
+    // @Inject(forwardRef(() => FileService))
     private readonly fileService: FileService,
+    
     @Inject(forwardRef(() => LikeService))
     private readonly likeService: LikeService,
   ) {}
 
+  // User tomonidan yoqtirilgan mahsulotlarni olish - LikeService dan
   async findLikedByUser(userId: number): Promise<Product[]> {
-    return this.productModel.findAll({
-      include: [
-        {
-          model: Like,
-          where: { user_id: userId },
-          attributes: [],
-        },
-      ],
-      where: {
-        is_liked: true,
-      },
-    })
+    return await this.likeService.getLikedProducts(userId);
   }
 
-
-  async getAllProducts(
-    filters?: ProductFilterDto,
-  ): Promise<PaginatedResponse<Product>> {
-    const whereClause: any = {};
+  // Barcha mahsulotlarni filter bilan olish
+  async getAllProducts(filters?: ProductFilterDto): Promise<PaginatedResponse<Product>> {
     const page = filters?.page || 1;
     const limit = filters?.limit || 20;
     const offset = (page - 1) * limit;
-    let order: any[] = [];
+
+    const query = this.productRepository.createQueryBuilder('product')
+      .leftJoinAndSelect('product.comments', 'comments')
+      .leftJoinAndSelect('product.likes', 'likes')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.product_item', 'product_item')
+      .leftJoinAndSelect('product_item.productConfigurations', 'productConfigurations')
+      .leftJoinAndSelect('productConfigurations.variationOption', 'variationOption');
 
     if (filters) {
       if (filters.category_id) {
-        whereClause.category_id = filters.category_id;
+        query.andWhere('product.category_id = :category_id', { category_id: filters.category_id });
       }
 
       if (filters.brand_id) {
-        whereClause.brand_id = filters.brand_id;
+        query.andWhere('product.brand_id = :brand_id', { brand_id: filters.brand_id });
       }
 
-      if (filters.min_price || filters.max_price) {
-        whereClause.price = {};
-        if (filters.min_price) {
-          whereClause.price[Op.gte] = filters.min_price;
-        }
-        if (filters.max_price) {
-          whereClause.price[Op.lte] = filters.max_price;
-        }
+      if (filters.min_price && filters.max_price) {
+        query.andWhere('product.price BETWEEN :min AND :max', {
+          min: filters.min_price,
+          max: filters.max_price,
+        });
+      } else if (filters.min_price) {
+        query.andWhere('product.price >= :min', { min: filters.min_price });
+      } else if (filters.max_price) {
+        query.andWhere('product.price <= :max', { max: filters.max_price });
       }
 
       if (filters.search) {
-        whereClause[Op.or] = [
-          {
-            name: {
-              [Op.iLike]: `%${filters.search}%`,
-            },
-          },
-          {
-            description: {
-              [Op.iLike]: `%${filters.search}%`,
-            },
-          },
-        ];
-      }
-
-      // Add variation filtering
-      if (filters.variations && Object.keys(filters.variations).length > 0) {
-        const variationFilters = [];
-
-        for (const [variationId, optionId] of Object.entries(filters.variations)) {
-          variationFilters.push({
-            '$productItems.variationOptions.variation_id$': variationId,
-            '$productItems.variationOptions.id$': optionId,
-          });
-        }
-
-        whereClause[Op.and] = variationFilters;
+        query.andWhere(
+          '(product.name ILIKE :search OR product.description ILIKE :search)',
+          { search: `%${filters.search}%` },
+        );
       }
 
       if (filters.sort) {
         switch (filters.sort) {
           case 'price_asc':
-            order.push(['price', 'ASC']);
+            query.orderBy('product.price', 'ASC');
             break;
           case 'price_desc':
-            order.push(['price', 'DESC']);
+            query.orderBy('product.price', 'DESC');
             break;
           case 'rating_desc':
-            order.push(['rating', 'DESC']);
+            query.orderBy('product.rating', 'DESC');
             break;
         }
       }
     }
 
-    const { count, rows } = await this.productModel.findAndCountAll({
-      where: whereClause,
-      include: [
-        { model: Comment },
-        { model: Like },
-        { model: Category },
-        {
-          model: ProductItem,
-          include: [{
-            model: ProductConfiguration,
-            include: [{
-              model: VariationOption,
-            }]
-          }]
-        },
-      ],
-      order,
-      limit,
-      offset,
-      distinct: true,
-    });
+    const [items, count] = await query
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
 
     return {
-      items: rows,
+      items,
       total: count,
-      page: page,
-      limit: limit,
+      page,
+      limit,
       totalPages: Math.ceil(count / limit),
     };
   }
 
-
+  // Bitta mahsulotni olish
   async getSingleProduct(id: number): Promise<Product> {
-    return await this.productModel.findOne({
+    const product = await this.productRepository.findOne({
       where: { id },
-      include: [
-        { model: Comment },
-        { model: Like },
-        { model: Category },
-        { model: ProductItem },
-      ],
+      relations: ['comments', 'likes', 'category', 'product_item', 'brand'],
     });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return product;
   }
 
+  // Eng ko'p chegirmali mahsulotlarni olish
   async getTopDiscountedProducts(): Promise<Product[]> {
-    return this.productModel.findAll({
-      where: {
-        is_aksiya: true,
-      },
-      order: [['rating', 'DESC']], // Rating bo'yicha tartiblash (katta -> kichik)
-      limit: 10, // Faqat eng yaxshi 10 ta mahsulotni olish
+    return this.productRepository.find({
+      where: { is_aksiya: true },
+      relations: ['category', 'brand'],
+      order: { rating: 'DESC' },
+      take: 10,
     });
   }
 
-
-  async createProduct(payload: CreateProductDto, file: Express.Multer.File): Promise<{ message: string, new_product: Product }> {
+  // Yangi mahsulot yaratish
+  async createProduct(payload: CreateProductDto, file: Express.Multer.File): Promise<{ message: string; new_product: Product }> {
     const image = await this.fileService.uploadFile(file);
 
-    const new_product = await this.productModel.create({
+    const new_product = this.productRepository.create({
       ...payload,
       image,
     });
+
+    await this.productRepository.save(new_product);
 
     return {
       message: 'Product created successfully',
@@ -182,30 +143,28 @@ export class ProductService {
     };
   }
 
+  // Mahsulotni yangilash
   async updateProduct(
     id: number,
     payload: UpdateProductRequest,
     file?: Express.Multer.File,
   ): Promise<{ message: string; updatedProduct: Product }> {
-    let newFileName: string | undefined;
+    const product = await this.productRepository.findOneBy({ id });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
 
     if (file) {
-      newFileName = await this.fileService.uploadFile(file);
-      const product = await this.productModel.findOne({ where: { id } });
-      if (product?.image) {
+      const newFileName = await this.fileService.uploadFile(file);
+      if (product.image) {
         await this.fileService.deleteFile(product.image);
       }
       payload.image = newFileName;
     }
 
-    await this.productModel.update(payload, {
-      where: { id },
-    });
-
-    const updatedProduct = await this.productModel.findOne({
-      where: { id },
-      include: ['category'],
-    });
+    const updated = this.productRepository.merge(product, payload);
+    const updatedProduct = await this.productRepository.save(updated);
 
     return {
       message: 'Product updated successfully',
@@ -213,36 +172,34 @@ export class ProductService {
     };
   }
 
+  // Mahsulotni o'chirish
   async deleteProduct(id: number): Promise<{ message: string }> {
-    const foundedProduct = await this.productModel.findByPk(id);
+    const product = await this.productRepository.findOneBy({ id });
 
-    if (foundedProduct.image) {
-      await this.fileService.deleteFile(foundedProduct.image);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    await foundedProduct.destroy();
+    if (product.image) {
+      await this.fileService.deleteFile(product.image);
+    }
+
+    await this.productRepository.remove(product);
 
     return {
       message: 'Product deleted successfully',
     };
   }
 
-  async toggleProductLike(id: number): Promise<{ message: string; product: Product }> {
-    const product = await this.productModel.findByPk(id);
-  
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-  
-    // Toggle the is_liked status
-    product.is_liked = !product.is_liked;
-  
-    await product.save();
-  
+  // Mahsulot like holatini o'zgartirish
+  async toggleProductLike(id: number, userId: number): Promise<{ message: string; isLiked: boolean }> {
+    // LikeService orqali like/unlike qilish
+    const toggleLikeDto = { userId, productId: id };
+    const result = await this.likeService.toggleLike(toggleLikeDto);
+
     return {
-      message: `Product is_liked status successfully updated to ${product.is_liked}`,
-      product,
+      message: result.message,
+      isLiked: result.isLiked,
     };
   }
-
 }

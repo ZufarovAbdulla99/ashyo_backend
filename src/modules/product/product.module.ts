@@ -1,15 +1,20 @@
-import { forwardRef, Module } from "@nestjs/common";
-import { SequelizeModule } from "@nestjs/sequelize";
-import { Product } from "./models";
-import { ProductService } from "./product.service";
-import { FileService } from "../file";
-import { ProductController } from "./product.controller";
-import { LikeModule } from "../like";
+import { forwardRef, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Product } from './models/product.model';
+import { ProductService } from './product.service';
+import { ProductController } from './product.controller';
+import { LikeModule } from '../like/like.module';
+import { FileModule } from '../file/file.module';
+import { DataSource } from 'typeorm';
 
 @Module({
-    imports: [SequelizeModule.forFeature([Product]), forwardRef(() => LikeModule)],
-    controllers: [ProductController],
-    providers: [ProductService,FileService],
-    exports: [ProductService],
+  imports: [
+    TypeOrmModule.forFeature([Product]),
+    forwardRef(() => LikeModule),
+    forwardRef(() => FileModule),
+  ],
+  controllers: [ProductController],
+  providers: [ProductService],
+  exports: [ProductService, TypeOrmModule],
 })
-export class ProductModule { }
+export class ProductModule {}

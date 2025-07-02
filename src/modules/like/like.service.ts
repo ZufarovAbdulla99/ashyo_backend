@@ -1,95 +1,126 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { InjectModel } from "@nestjs/sequelize";
-import { Like } from "./models";
-import { CreateLikeDto, ToggleLikeDto, UpdateLikeDto } from "./dtos";
-import { Product, ProductService } from "../product";
-import { Sequelize } from "sequelize";
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateLikeDto, ToggleLikeDto, UpdateLikeDto } from './dtos';
+import { Product } from '../product/models/product.model';
+import { Like } from './models';
+import { ProductService } from '../product';
 
 @Injectable()
 export class LikeService {
-    constructor(
-        @InjectModel(Like)
-        private readonly likeModel: typeof Like,
-        @Inject(forwardRef(() => ProductService))
-        private readonly productService: ProductService,
-    ) { }
+  constructor(
+    @InjectRepository(Like)
+    private readonly likeRepository: Repository<Like>,
 
-    async toggleLike(toggleLikeDto: ToggleLikeDto): Promise<{ message: string; isLiked: boolean }> {
-        const { userId, productId } = toggleLikeDto
+    @Inject(forwardRef(() => ProductService))
+    private readonly productService: ProductService,
+  ) {}
 
-        const [like, created] = await this.likeModel.findOrCreate({
-            where: { user_id: userId, product_id: productId },
-        })
+  async toggleLike(
+    toggleLikeDto: ToggleLikeDto,
+  ): Promise<{ message: string; isLiked: boolean }> {
+    const { userId, productId } = toggleLikeDto;
 
-        if (!created) {
-            await like.destroy()
-        }
+    // ProductService orqali mahsulot mavjudligini tekshirish
+    await this.productService.getSingleProduct(productId);
 
-        const product = await this.productService.getSingleProduct(productId)
-        if (!product) {
-            throw new Error(`Product with ID ${productId} not found`)
-        }
+    const existing = await this.likeRepository.findOne({
+      where: { user_id: userId, product_id: productId },
+    });
 
-        product.is_liked = created
-        await product.save()
+    let created = false;
 
-        return {
-            message: created ? "Product liked successfully" : "Product unliked successfully",
-            isLiked: created,
-        }
+    if (!existing) {
+      const newLike = this.likeRepository.create({
+        user_id: userId,
+        product_id: productId,
+      });
+      await this.likeRepository.save(newLike);
+      created = true;
+    } else {
+      await this.likeRepository.remove(existing);
     }
 
-    async getLikedProducts(userId: number) {
-        return this.productService.findLikedByUser(userId)
-    }
+    return {
+      message: created
+        ? 'Product liked successfully'
+        : 'Product unliked successfully',
+      isLiked: created,
+    };
+  }
 
-    async getLikedProductsIdsArray(userId: number) {
-        const array = await this.productService.findLikedByUser(userId);
-        const productIds = array.map(product => product?.dataValues?.id); 
-        console.log(productIds);
-        return productIds;
-    }
+  // User tomonidan like qilingan mahsulotlar
+  async getLikedProducts(userId: number): Promise<Product[]> {
+    const likes = await this.likeRepository.find({
+      where: { user_id: userId },
+      relations: ['product', 'product.category', 'product.brand'],
+    });
     
+    return likes.map(like => like.product);
+  }
+
+  // User tomonidan like qilingan mahsulotlar ID arraysi
+  async getLikedProductsIdsArray(userId: number): Promise<number[]> {
+    const likes = await this.likeRepository.find({
+      where: { user_id: userId },
+      select: ['product_id']
+    });
     
-    async getSingleLike(id: number): Promise<Like> {
-        return this.likeModel.findOne({
-            where: { id }
-        })
+    return likes.map(like => like.product_id);
+  }
+
+  async getSingleLike(id: number): Promise<Like> {
+    const like = await this.likeRepository.findOne({ where: { id } });
+    if (!like) throw new NotFoundException(`Like with ID ${id} not found`);
+    return like;
+  }
+
+  async createLike(
+    payload: CreateLikeDto,
+  ): Promise<{ message: string; new_like: Like }> {
+    // Mahsulot mavjudligini tekshirish
+    await this.productService.getSingleProduct(payload.product_id);
+
+    const newLike = this.likeRepository.create(payload);
+    await this.likeRepository.save(newLike);
+    return {
+      message: 'Like created successfully!',
+      new_like: newLike,
+    };
+  }
+
+  async updateLike(
+    id: number,
+    payload: UpdateLikeDto,
+  ): Promise<{ message: string; updatedLike: Like }> {
+    if (payload.product_id) {
+      // Yangi product_id bo'lsa, mavjudligini tekshirish
+      await this.productService.getSingleProduct(payload.product_id);
     }
 
-    async createLike(payload: CreateLikeDto): Promise<{ message: string; new_like: Like }> {
-        const new_like = await this.likeModel.create({
-            user_id: payload.user_id,
-            product_id: payload.product_id
-        })
+    await this.likeRepository.update(id, payload);
+    const updatedLike = await this.likeRepository.findOne({ where: { id } });
+    if (!updatedLike)
+      throw new NotFoundException(`Like with ID ${id} not found`);
+    return {
+      message: 'Like updated successfully',
+      updatedLike,
+    };
+  }
 
-        return {
-            message: "Like created successfully!",
-            new_like
-        }
+  async deleteLike(id: number): Promise<{ message: string }> {
+    const like = await this.likeRepository.findOne({ where: { id } });
+    if (!like) {
+      return { message: `${id} raqamli Like topilmadi!!!` };
     }
-
-    async updateLike(id: number, payload: UpdateLikeDto): Promise<{ message: string, updatedLike: Like }> {
-        await this.likeModel.update(payload, { where: { id } })
-
-        const updatedLike = await this.likeModel.findOne({ where: { id } })
-
-        if (!updatedLike) throw new Error(`Like with ID ${id} not found`);
-
-        return {
-            message: "Like updated successfully",
-            updatedLike
-        }
-
-    }
-
-    async deleteLike(id: number): Promise<{ message: string }> {
-        const like = await this.likeModel.findByPk(id)
-        if (!like) return { message: `${id} raqamli Like topilmadi!!!` }
-        await like.destroy()
-        return {
-            message: "Like deleted successfully"
-        }
-
-    }
+    await this.likeRepository.remove(like);
+    return {
+      message: 'Like deleted successfully',
+    };
+  }
 }

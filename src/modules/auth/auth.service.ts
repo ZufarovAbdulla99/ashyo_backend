@@ -1,17 +1,18 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { User } from '../user';
+import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { Repository } from 'typeorm';
+import { User } from '../user';
 import { LoginDto, RegisterDto, VerifyOtpDto, ResetPasswordDto } from './dtos';
 import { AuthResponse } from './interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User) private readonly userModel: typeof User,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
@@ -24,11 +25,17 @@ export class AuthService {
     return {
       accessToken: this.jwtService.sign(
         { userId, email, role },
-        { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '24h', secret: process.env.JWT_ACCESS_SECRET },
+        {
+          expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '24h',
+          secret: process.env.JWT_ACCESS_SECRET,
+        },
       ),
       refreshToken: this.jwtService.sign(
         { userId, email, role },
-        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d', secret: process.env.JWT_REFRESH_SECRET },
+        {
+          expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+          secret: process.env.JWT_REFRESH_SECRET,
+        },
       ),
     };
   }
@@ -36,18 +43,24 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const { email, fullname, password } = registerDto;
 
-    const existingUser = await this.userModel.findOne({ where: { email } });
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
-      throw new HttpException("Email allaqachon ro'yxatdan o'tgan", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Email allaqachon ro'yxatdan o'tgan",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await this.userModel.create({
+    const user = this.userRepository.create({
       fullname,
       email,
       password: hashedPassword,
     });
+    await this.userRepository.save(user);
 
     const tokens = this.generateTokens(user.id, user.email, user.role);
 
@@ -65,7 +78,7 @@ export class AuthService {
   }
 
   async sendOtp(email: string): Promise<{ message: string }> {
-    const user = await this.userModel.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new HttpException('Foydalanuvchi topilmadi', HttpStatus.NOT_FOUND);
     }
@@ -90,24 +103,36 @@ export class AuthService {
 
     const otpData = global.otpStore?.[email];
     if (!otpData) {
-      throw new HttpException('Tasdiqlash kodi topilmadi', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Tasdiqlash kodi topilmadi',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (otpData.otp !== otp) {
-      throw new HttpException("Noto'g'ri tasdiqlash kodi", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Noto'g'ri tasdiqlash kodi",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (Date.now() > otpData.expiresAt) {
       delete global.otpStore[email];
-      throw new HttpException('Tasdiqlash kodi muddati tugagan', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Tasdiqlash kodi muddati tugagan',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    const user = await this.userModel.findOne({ where: { id: otpData.userId } });
+    const user = await this.userRepository.findOne({
+      where: { id: otpData.userId },
+    });
     if (!user) {
       throw new HttpException('Foydalanuvchi topilmadi', HttpStatus.NOT_FOUND);
     }
 
-    await user.update({ is_verified: true });
+    user.is_verified = true;
+    await this.userRepository.save(user);
 
     delete global.otpStore[email];
 
@@ -121,39 +146,45 @@ export class AuthService {
         role: user.role,
         is_verified: user.is_verified,
       },
-      message: "Email muvaffaqiyatli tasdiqlandi",
+      message: 'Email muvaffaqiyatli tasdiqlandi',
     };
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
     const { email, password } = loginDto;
-    const user = await this.userModel.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
-        throw new HttpException("Email yoki parol noto'g'ri", HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        "Email yoki parol noto'g'ri",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password); // Hash bilan solishtirish
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-        throw new HttpException("Email yoki parol noto'g'ri", HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        "Email yoki parol noto'g'ri",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     const tokens = this.generateTokens(user.id, user.email, user.role);
     return {
-        ...tokens,
-        user: {
-            id: user.id,
-            fullname: user.fullname,
-            email: user.email,
-            role: user.role,
-            is_verified: user.is_verified,
-        },
-        message: 'Muvaffaqiyatli login qilindi',
+      ...tokens,
+      user: {
+        id: user.id,
+        fullname: user.fullname,
+        email: user.email,
+        role: user.role,
+        is_verified: user.is_verified,
+      },
+      message: 'Muvaffaqiyatli login qilindi',
     };
-}
+  }
 
   async sendOtpForPasswordReset(email: string): Promise<{ message: string }> {
-    const user = await this.userModel.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new HttpException('Foydalanuvchi topilmadi', HttpStatus.NOT_FOUND);
     }
@@ -173,30 +204,44 @@ export class AuthService {
     return { message: 'Parolni tiklash kodi emailingizga yuborildi' };
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<{ message: string }> {
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
     const { email, otp, new_password } = resetPasswordDto;
 
     const otpData = global.otpStore?.[email];
     if (!otpData) {
-      throw new HttpException('Tasdiqlash kodi topilmadi', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Tasdiqlash kodi topilmadi',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (otpData.otp !== otp) {
-      throw new HttpException("Noto'g'ri tasdiqlash kodi", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Noto'g'ri tasdiqlash kodi",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (Date.now() > otpData.expiresAt) {
       delete global.otpStore[email];
-      throw new HttpException('Tasdiqlash kodi muddati tugagan', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Tasdiqlash kodi muddati tugagan',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    const user = await this.userModel.findOne({ where: { id: otpData.userId } });
+    const user = await this.userRepository.findOne({
+      where: { id: otpData.userId },
+    });
     if (!user) {
       throw new HttpException('Foydalanuvchi topilmadi', HttpStatus.NOT_FOUND);
     }
 
     const hashedPassword = await bcrypt.hash(new_password, 10);
-    await user.update({ password: hashedPassword });
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
 
     delete global.otpStore[email];
 

@@ -1,34 +1,42 @@
-import {
-  Table,
-  Model,
-  Column,
-  DataType,
-  ForeignKey,
-  BelongsTo,
-} from 'sequelize-typescript';
-import { User } from 'src/modules/user';
+// src/modules/cart/entities/cart_item.entity.ts
 import { Product } from 'src/modules/product';
+import { User } from 'src/modules/user';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
-@Table({ tableName: 'cart_item', timestamps: true })
-export class CartItem extends Model {
-  
-  @ForeignKey(() => User)
-  @Column({ type: DataType.BIGINT, allowNull: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+@Entity({ name: 'cart_item' })
+export class CartItem {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'bigint' })
   user_id: number;
 
-  @ForeignKey(() => Product)
-  @Column({ type: DataType.BIGINT, allowNull: false, onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @Column({ type: 'bigint' })
   product_id: number;
 
-  @Column({ type: DataType.BIGINT, allowNull: false })
+  @Column({ type: 'bigint' })
   quantity: number;
 
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @Column({ type: 'int' })
   price: number;
 
-  @BelongsTo(() => User)
+  @ManyToOne(() => User, (user) => user.cartItems, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @BelongsTo(() => Product)
+  @ManyToOne(() => Product, (product) => product.cartItems, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 }

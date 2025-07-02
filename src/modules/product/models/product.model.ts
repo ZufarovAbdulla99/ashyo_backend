@@ -1,84 +1,83 @@
 import {
-  Table,
-  Model,
+  Entity,
+  PrimaryGeneratedColumn,
   Column,
-  DataType,
-  ForeignKey,
-  BelongsTo,
-  HasMany,
-} from 'sequelize-typescript';
-import { Banner } from 'src/modules/banner/model';
-import { Brand } from 'src/modules/brand';
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 import { Category } from 'src/modules/category';
+import { Brand } from 'src/modules/brand';
 import { Comment } from 'src/modules/comment';
 import { Like } from 'src/modules/like';
 import { ProductItem } from 'src/modules/product_item';
+import { CartItem } from 'src/modules/cart_item';
+import { Banner } from 'src/modules/banner';
 
-@Table({ tableName: 'products', timestamps: true })
-export class Product extends Model {
-  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+@Entity('products')
+export class Product {
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: DataType.TEXT, allowNull: false, unique: true })
+  @Column({ type: 'text', unique: true })
   name: string;
 
-  @Column({ type: DataType.BOOLEAN, allowNull: false })
+  @Column({ type: 'boolean', default: false })
   is_liked: boolean;
 
-  @ForeignKey(() => Category)
-  @Column({
-    type: DataType.BIGINT,
-    allowNull: false,
-    onDelete: 'CASCADE',
-    onUpdate: 'NO ACTION',
-  })
+  @Column()
   category_id: number;
 
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @ManyToOne(() => Category, (category) => category.products, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'category_id' })
+  category: Category;
+
+  @Column({ type: 'text' })
   description: string;
 
   @Column({
-    type: DataType.ENUM('3 oy', '6 oy', '12 oy'),
-    allowNull: false,
+    type: 'enum',
+    enum: ['3 oy', '6 oy', '12 oy'],
   })
   nasiya: string;
 
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @Column({ type: 'text' })
   summary: string;
 
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @Column({ type: 'int' })
   price: number;
 
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @Column({ type: 'int' })
   rating: number;
 
-  @Column({ type: DataType.BOOLEAN, allowNull: true, defaultValue: false })
+  @Column({ type: 'boolean', default: false, nullable: true })
   is_aksiya: boolean;
 
-  @ForeignKey(() => Brand)
-  @Column({ type: DataType.BIGINT, allowNull: false,})
+  @Column()
   brand_id: number;
 
-  @Column({ type: DataType.STRING, allowNull: true })
-  image: string;
-
-  @BelongsTo(() => Category)
-  category: Category;
-
-  @BelongsTo(() => Brand)
+  @ManyToOne(() => Brand, (brand) => brand.products, { onDelete: 'NO ACTION' })
+  @JoinColumn({ name: 'brand_id' })
   brand: Brand;
 
-  @HasMany(() => Comment)
+  @Column({ type: 'varchar', nullable: true })
+  image: string;
+
+  @OneToMany(() => Comment, (comment) => comment.product)
   comments: Comment[];
 
-  @HasMany(() => Like)
-  like: Like[];
+  // Bu yerda xato bor edi - likes bo'lishi kerak, like emas
+  @OneToMany(() => Like, (like) => like.product)
+  likes: Like[];
 
+  @OneToMany(() => ProductItem, (item) => item.product)
+  product_item: ProductItem[];
 
-  @HasMany(() => ProductItem)
-  product_item: ProductItem[]
+  @OneToMany(() => CartItem, (cartItem) => cartItem.product)
+  cartItems: CartItem[];
 
-  @HasMany(() => Banner)  
+  @OneToMany(() => Banner, (banner) => banner.product)
   banners: Banner[];
-
 }

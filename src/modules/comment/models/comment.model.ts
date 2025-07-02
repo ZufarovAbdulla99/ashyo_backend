@@ -1,23 +1,46 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
-import { User } from "src/modules/user";
-import { Product } from "src/modules/product";
+import { Product } from 'src/modules/product';
+import { User } from 'src/modules/user';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Table({ tableName: "comment", timestamps: true })
-export class Comment extends Model {
-    @Column({ type: DataType.TEXT, allowNull: false })
-    text: string;
+@Entity('comment')
+export class Comment {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ForeignKey(() => User)
-    @Column({ type: DataType.INTEGER, allowNull: false, onDelete: "CASCADE", onUpdate: "CASCADE" })
-    user_id: number;
+  @Column({ type: 'text', nullable: false })
+  text: string;
 
-    @ForeignKey(() => Product)
-    @Column({ type: DataType.INTEGER, allowNull: false, onDelete: "CASCADE", onUpdate: "CASCADE" })
-    product_id: number;
+  @ManyToOne(() => User, (user) => user.comment, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-    @BelongsTo(() => User)
-    user: User;
+  @Column()
+  user_id: number;
 
-    @BelongsTo(() => Product)
-    product: Product;
+  @ManyToOne(() => Product, (product) => product.comments, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
+
+  @Column()
+  product_id: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

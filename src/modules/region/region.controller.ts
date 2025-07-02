@@ -9,7 +9,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { RegionService } from './region.service';
-import { Region } from './models';
+import { Region } from './entity';
 import { CreateRegionDto, UpdateRegionDto } from './dto';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Protected, Roles } from '@decorators';

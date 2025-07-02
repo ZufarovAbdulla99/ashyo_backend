@@ -8,12 +8,19 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './models';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { ProductFilterDto } from './interfaces';
@@ -106,7 +113,6 @@ export class ProductController {
   async getTopDiscountedProducts(): Promise<Product[]> {
     return this.#_service.getTopDiscountedProducts();
   }
-  
 
   @ApiBearerAuth()
   @Protected(true)
@@ -146,12 +152,16 @@ export class ProductController {
     return await this.#_service.deleteProduct(+id);
   }
 
-  @Protected(false)
-@Roles([UserRoles.admin, UserRoles.user])
-@ApiOperation({ summary: 'Toggle is_liked status for a product' })
-@Patch('/:id/toggle-like')
-async toggleProductLike(@Param('id') id: number): Promise<{ message: string; product: Product }> {
-  return await this.#_service.toggleProductLike(id);
-}
-
+  @ApiBearerAuth()
+  @Protected(true)
+  @Roles([UserRoles.admin, UserRoles.user])
+  @ApiOperation({ summary: 'Toggle is_liked status for a product' })
+  @Patch('/:id/toggle-like')
+  async toggleProductLike(
+    @Param('id') id: number,
+    @Req() request: any,
+  ): Promise<{ message: string; isLiked: boolean }> {
+    const userId = request.user.id; // JWT token dan olingan user ID
+    return await this.#_service.toggleProductLike(id, userId);
+  }
 }

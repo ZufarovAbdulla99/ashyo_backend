@@ -1,69 +1,60 @@
+// user.service.ts
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { User } from './models';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { FileService } from '../file';
 import { CreateUserDto } from './dtos';
 import { UpdateUserRequest } from './interfaces';
-import { Like } from '../like';
-import { Comment } from '../comment';
-
-import { Address } from '../address';
-import { Region } from '../region';
-import { CartItem } from '../cart_item';
-import { Product } from '../product';
+import { Address } from '../address/entity';
+import { Region } from '../region/entity';
+import { User } from './models';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User) private userModel: typeof User,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
     private fileService: FileService,
   ) {}
 
   async getAllUsers(): Promise<User[]> {
-    return await this.userModel.findAll({
-      include: [
-        { model: Like, attributes: ['id', 'product_id'] },
-
-        { model: Comment, attributes: ['id', 'product_id'] },
-        { model: CartItem, attributes: ['id', 'product_id'] },
-        {
-          model: Address,
-          include: [
-            { model: Region, as: 'region' },
-            { model: Region, as: 'city' },
-            { model: Region, as: 'district' },
-          ],
+    return await this.userRepo.find({
+      relations: {
+        like: true,
+        comment: true,
+        cartItems: { product: true },
+        address: {
+          region: true,
+          city: true,
+          district: true,
         },
-      ],
+      },
+      select: {
+        // like: { id: true, product: { id: true } },
+        comment: { id: true, product: { id: true } },
+        cartItems: { id: true, product: { id: true } },
+      },
     });
   }
 
   async getSingleUser(id: number): Promise<User> {
-    return await this.userModel.findOne({
+    return await this.userRepo.findOne({
       where: { id },
-      include: [
-        { model: Like, attributes: ['id', 'product_id'] },
-
-        { model: Comment, attributes: ['id', 'product_id'] },
-        {
-          model: CartItem,
-          attributes: ['id', 'product_id'],
-          include: [
-            {
-              model: Product,
-              as: 'product',
-            }
-          ]
+      relations: {
+        like: true,
+        comment: true,
+        cartItems: { product: true },
+        address: {
+          region: true,
+          city: true,
+          district: true,
         },
-        {
-          model: Address,
-          include: [
-            { model: Region, as: 'region' },
-            { model: Region, as: 'city' },
-            { model: Region, as: 'district' },
-          ],
-        },
-      ],
+      },
+      select: {
+        // like: { id: true, product: { id: true } },
+        comment: { id: true, product: { id: true } },
+        cartItems: { id: true, product: { id: true } },
+      },
     });
   }
 
@@ -71,16 +62,12 @@ export class UserService {
     payload: CreateUserDto,
     file: Express.Multer.File,
   ): Promise<{ message: string; new_user: User }> {
-    
     const image = await this.fileService.uploadFile(file);
-    const new_user = await this.userModel.create({
-      fullname: payload.fullname,
-      email: payload.email,
-      phone_number: payload.phone_number,
-      password: payload.password,
-      role: payload?.role,
+    const new_user = this.userRepo.create({
+      ...payload,
       image,
     });
+    await this.userRepo.save(new_user);
 
     return {
       message: 'User created successfully',
@@ -93,22 +80,19 @@ export class UserService {
     payload: UpdateUserRequest,
     file?: Express.Multer.File,
   ): Promise<{ message: string; updatedUser: User }> {
-    let newFileName: string | undefined;
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new Error('User not found');
 
     if (file) {
-      newFileName = await this.fileService.uploadFile(file);
-      const user = await this.userModel.findOne({ where: { id } });
-      if (user?.image) {
+      if (user.image) {
         await this.fileService.deleteFile(user.image);
       }
+      const newFileName = await this.fileService.uploadFile(file);
       payload.image = newFileName;
     }
 
-    await this.userModel.update(payload, {
-      where: { id },
-    });
-
-    const updatedUser = await this.userModel.findOne({ where: { id } });
+    await this.userRepo.update(id, payload);
+    const updatedUser = await this.userRepo.findOne({ where: { id } });
 
     return {
       message: 'User updated successfully',
@@ -117,10 +101,14 @@ export class UserService {
   }
 
   async deleteUser(id: number): Promise<{ message: string }> {
-    const foundedUser = await this.userModel.findByPk(id);
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new Error('User not found');
 
-    await this.fileService.deleteFile(foundedUser.image);
-    foundedUser.destroy();
+    if (user.image) {
+      await this.fileService.deleteFile(user.image);
+    }
+
+    await this.userRepo.remove(user);
 
     return {
       message: 'User deleted successfully',

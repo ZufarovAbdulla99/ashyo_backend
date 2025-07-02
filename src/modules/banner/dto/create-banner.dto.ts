@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -12,6 +13,7 @@ export class CreateBannerDto {
     type: Number,
   })
   @IsOptional()
+  @IsInt()
   product_id?: number;
 
   @ApiProperty({
@@ -20,6 +22,7 @@ export class CreateBannerDto {
     type: Number,
   })
   @IsOptional()
+  @IsInt()
   category_id?: number;
 
   @ApiProperty({
