@@ -41,6 +41,10 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_verified: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  refresh_token?: string | null;
+
+
   @OneToMany(() => Address, (address) => address.user)
   address: Address[];
 

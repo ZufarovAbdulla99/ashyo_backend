@@ -48,12 +48,13 @@ import { BannerModule } from './modules/banner/banner.module';
 import { ColorModule } from './modules/color/color.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import mailerConfig from './config/mailer.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, jwtConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailerConfig],
     }),
     ServeStaticModule.forRoot({
       serveRoot: '/uploads',
@@ -184,14 +185,14 @@ import { TelegramModule } from './modules/telegram/telegram.module';
   ],
   controllers: [],
   providers: [
-    //  {
-    //    useClass: CheckAuthGuard,
-    //    provide: APP_GUARD,
-    //  },
-    //  {
-    //    useClass: CheckRoleGuard,
-    //    provide: APP_GUARD,
-    //  },
+     {
+       useClass: CheckAuthGuard,
+       provide: APP_GUARD,
+     },
+     {
+       useClass: CheckRoleGuard,
+       provide: APP_GUARD,
+     },
   ],
 })
 export class AppModule {}

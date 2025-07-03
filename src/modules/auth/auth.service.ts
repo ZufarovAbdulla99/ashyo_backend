@@ -43,6 +43,47 @@ export class AuthService {
     };
   }
 
+  async refreshTokens(refreshToken: string): Promise<AuthResponse> {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      const user = await this.userRepository.findOne({
+        where: { id: payload.userId },
+      });
+
+      if (!user || user.refresh_token !== refreshToken) {
+        throw new HttpException(
+          'Refresh token yaroqsiz',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const tokens = this.generateTokens(user.id, user.email, user.role);
+
+      user.refresh_token = tokens.refreshToken;
+      await this.userRepository.save(user);
+
+      return {
+        ...tokens,
+        user: {
+          id: user.id,
+          fullname: user.fullname,
+          email: user.email,
+          role: user.role,
+          is_verified: user.is_verified,
+        },
+        message: 'Tokenlar muvaffaqiyatli yangilandi',
+      };
+    } catch (err) {
+      throw new HttpException(
+        'Refresh token noto‘g‘ri yoki muddati tugagan',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }
+
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const { email, fullname, password } = registerDto;
 
@@ -67,8 +108,11 @@ export class AuthService {
 
     const tokens = this.generateTokens(user.id, user.email, user.role);
 
+    user.refresh_token = tokens.refreshToken;
+    await this.userRepository.save(user);
+
     return {
-      ...tokens,
+      // ...tokens,
       user: {
         id: user.id,
         fullname: user.fullname,
@@ -173,6 +217,10 @@ export class AuthService {
     }
 
     const tokens = this.generateTokens(user.id, user.email, user.role);
+
+    user.refresh_token = tokens.refreshToken;
+    await this.userRepository.save(user);
+
     return {
       ...tokens,
       user: {
@@ -184,6 +232,19 @@ export class AuthService {
       },
       message: 'Muvaffaqiyatli login qilindi',
     };
+  }
+
+  async logout(userId: number): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new HttpException('Foydalanuvchi topilmadi', HttpStatus.NOT_FOUND);
+    }
+
+    user.refresh_token = null;
+    await this.userRepository.save(user);
+
+    return { message: 'Muvaffaqiyatli logout qilindi' };
   }
 
   async sendOtpForPasswordReset(email: string): Promise<{ message: string }> {

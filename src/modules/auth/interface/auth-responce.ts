@@ -1,6 +1,6 @@
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+  // accessToken: string;
+  // refreshToken: string;
   message: string;
   user: {
       id: number;

@@ -50,17 +50,23 @@ export class CheckAuthGuard implements CanActivate {
 
     const bearerToken = request.headers['authorization'];
 
-    if (
-      !(
-        bearerToken &&
-        bearerToken.startsWith('Bearer') &&
-        bearerToken.split('Bearer ')[1]?.length
-      )
-    ) {
+    // if (
+    //   !(
+    //     bearerToken &&
+    //     bearerToken.startsWith('Bearer ') &&
+    //     bearerToken.split('Bearer ')[1]?.length
+    //   )
+    // ) {
+    //   throw new BadRequestException('Please provide valid bearer token');
+    // }
+
+    // const token = bearerToken.split('Bearer ')[1];
+
+    if (!bearerToken || !bearerToken.startsWith('Bearer ')) {
       throw new BadRequestException('Please provide valid bearer token');
     }
 
-    const token = bearerToken.split('Bearer ')[1];
+    const token = bearerToken.replace('Bearer ', '').trim();
 
     try {
       this.jwtService.verify(token, {
@@ -84,7 +90,7 @@ export class CheckAuthGuard implements CanActivate {
 
     const userDecodedData = this.jwtService.decode(token);
 
-    request.userId = userDecodedData?.id;
+    request.userId = userDecodedData?.userId;
     request.role = userDecodedData?.role;
 
     return true;

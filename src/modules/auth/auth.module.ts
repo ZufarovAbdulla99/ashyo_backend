@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../user/models/user.model';
@@ -10,22 +11,26 @@ import { User } from '../user/models/user.model';
   imports: [
     TypeOrmModule.forFeature([User]),
 
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: `kamronbekbahriyev18@gmail.com`,
-          pass: `whudllcxkbgnpgmu`,
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        transport: {
+          host: config.get<string>('mailer.host'),
+          port: config.get<number>('mailer.port'),
+          secure: false,
+          auth: {
+            user: config.get<string>('mailer.user'),
+            pass: config.get<string>('mailer.pass'),
+          },
         },
-      },
-      defaults: {
-        from: `"No Reply" <${process.env.SENDING_EMAIL}>`,
-      },
+        defaults: {
+          from: config.get<string>('mailer.from'),
+        },
+      }),
     }),
 
-    JwtModule.register({}), // agar global JWT config bo'lsa bu bo'lim optional
+    JwtModule.register({}),
   ],
   providers: [AuthService],
   controllers: [AuthController],
