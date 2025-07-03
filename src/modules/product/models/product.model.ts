@@ -1,3 +1,10 @@
+import { Banner } from 'src/modules/banner/model/banner.model';
+import { Brand } from 'src/modules/brand/models/brand.model';
+import { CartItem } from 'src/modules/cart_item/models/cart_item.model';
+import { Category } from 'src/modules/category/models/category.model';
+import { Comment } from 'src/modules/comment/models/comment.model';
+import { Like } from 'src/modules/like/models/like.model';
+import { ProductItem } from 'src/modules/product_item/models/product_item.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,13 +13,6 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Category } from 'src/modules/category';
-import { Brand } from 'src/modules/brand';
-import { Comment } from 'src/modules/comment';
-import { Like } from 'src/modules/like';
-import { ProductItem } from 'src/modules/product_item';
-import { CartItem } from 'src/modules/cart_item';
-import { Banner } from 'src/modules/banner';
 
 @Entity('products')
 export class Product {

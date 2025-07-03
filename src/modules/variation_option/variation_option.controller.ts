@@ -7,12 +7,12 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { CreateVariationOptionDto } from './dto';
-import { UpdateVariationOptionDto } from './dto';
 import { VariationOptionService } from './variation_option.service';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateVariationOptionDto } from './dto/create-variation_option.dto';
+import { UpdateVariationOptionDto } from './dto/update-variation_option.dto';
 
 @Controller('variation-options')
 export class VariationOptionController {

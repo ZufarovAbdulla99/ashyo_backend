@@ -1,6 +1,6 @@
 import { IsNumber, IsString } from "class-validator";
-import { CreateCommentRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { CreateCommentRequest } from "../interfaces/create-comment.interface";
 
 export class CreateCommentDto implements CreateCommentRequest {
     @ApiProperty({

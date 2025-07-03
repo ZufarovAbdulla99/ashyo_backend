@@ -2,8 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FileService } from '../file/file.service';
-import { CreateBrandRequest, UpdateBrandRequest } from './interfaces';
-import { Brand } from './models';
+import { Brand } from './models/brand.model';
+import { CreateBrandRequest } from './interfaces/create-brand.interface';
+import { UpdateBrandRequest } from './interfaces/update-brand.interface';
 
 @Injectable()
 export class BrandService {

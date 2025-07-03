@@ -1,10 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ContactService } from './contact.service';
-import { CreateContactDto } from './dtos';
-import { Contact } from './models';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateContactDto } from './dtos/create-comment.dto';
+import { Contact } from './models/contact.model';
 
 @ApiTags('Contact Us')
 @Controller('contact')

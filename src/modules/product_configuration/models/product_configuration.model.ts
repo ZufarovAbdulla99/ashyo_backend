@@ -1,5 +1,5 @@
-import { ProductItem } from 'src/modules/product_item';
-import { VariationOption } from 'src/modules/variation_option';
+import { ProductItem } from 'src/modules/product_item/models/product_item.entity';
+import { VariationOption } from 'src/modules/variation_option/models/variation_option.model';
 import {
   Entity,
   PrimaryGeneratedColumn,

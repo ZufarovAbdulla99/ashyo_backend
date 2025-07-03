@@ -11,8 +11,8 @@ import { VariationService } from './variation.service';
 import { CreateVariationDto } from './dto/create-variation.dto';
 import { UpdateVariationDto } from './dto/update-variation.dto';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UserRoles } from '../user/enums/user-roles.enum';
 
 @Controller('variations')
 export class VariationController {

@@ -1,4 +1,4 @@
-import { UserRoles } from "../enums";
+import { UserRoles } from "../enums/user-roles.enum";
 
 export declare interface CreateUserRequest {
     fullname: string;

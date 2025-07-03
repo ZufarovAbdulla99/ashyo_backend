@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateBrandRequest } from '../interfaces';
 import { IsString } from 'class-validator';
+import { CreateBrandRequest } from '../interfaces/create-brand.interface';
 
 export class CreateBrandDto implements Omit<CreateBrandRequest, 'image'> {
   @ApiProperty({

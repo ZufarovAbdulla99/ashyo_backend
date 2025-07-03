@@ -1,4 +1,5 @@
-// src/banner/banner.entity.ts
+import { Category } from 'src/modules/category/models/category.model';
+import { Product } from 'src/modules/product/models/product.model';
 import {
   Entity,
   Column,
@@ -8,8 +9,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Category } from 'src/modules/category';
-import { Product } from 'src/modules/product';
 
 @Entity('banner')
 export class Banner {

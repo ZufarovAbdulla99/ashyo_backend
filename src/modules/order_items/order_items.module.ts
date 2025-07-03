@@ -2,9 +2,9 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderItemsService } from './order_items.service';
 import { OrderItemsController } from './order_items.controller';
-import { OrderItems } from './models';
 import { ProductItem } from '../product_item/models/product_item.entity';
 import { Order } from '../order/models/order.model';
+import { OrderItems } from './models/order_item.entity';
 
 @Module({
   imports: [

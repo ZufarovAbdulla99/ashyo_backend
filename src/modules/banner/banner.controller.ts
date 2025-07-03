@@ -1,11 +1,12 @@
 import { Controller, Post, Get, Param, Body, Put, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { BannerService } from './banner.service';
-import { CreateBannerDto, UpdateBannerDto } from './dto';
-import { Banner } from './model';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { Banner } from './model/banner.model';
+import { CreateBannerDto } from './dto/create-banner.dto';
+import { UpdateBannerDto } from './dto/update-banner.dto';
 
 @ApiTags('banners')
 @Controller('banners')

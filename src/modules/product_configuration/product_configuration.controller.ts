@@ -11,8 +11,8 @@ import { ProductConfigurationService } from './product_configuration.service';
 import { CreateProductConfigurationDto } from './dto/create-product_configuration.dto';
 import { UpdateProductConfigurationDto } from './dto/update-product_configuration.dto';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UserRoles } from '../user/enums/user-roles.enum';
 
 @Controller('product-configuration')
 export class ProductConfigurationController {

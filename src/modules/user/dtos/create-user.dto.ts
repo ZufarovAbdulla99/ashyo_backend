@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { CreateUserRequest } from "../interfaces/create-user.interface";
 import { IsEmail, IsEnum, IsOptional, IsPhoneNumber, IsString, Length } from "class-validator";
-import { UserRoles } from "../enums";
+import { UserRoles } from "../enums/user-roles.enum";
 
 export class CreateUserDto implements Omit<CreateUserRequest, "image"> {
     @ApiProperty({

@@ -11,19 +11,19 @@ import {
   UploadedFiles,
   Query,
 } from '@nestjs/common';
-import { CategoryService } from './category.service';
-import { CreateCategoryDto } from './dtos/create-category.dto';
-import { UpdateCategoryDto } from './dtos/update-category.dto';
-import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
 import {
   ApiBearerAuth,
   ApiConsumes,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Category } from './models';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Protected, Roles } from '@decorators';
+import { CategoryService } from './category.service';
+import { CreateCategoryDto } from './dtos/create-category.dto';
+import { UpdateCategoryDto } from './dtos/update-category.dto';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { Category } from './models/category.model';
 
 @ApiTags('Category')
 @Controller('/categories')

@@ -5,9 +5,12 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { Repository } from 'typeorm';
-import { User } from '../user';
-import { LoginDto, RegisterDto, VerifyOtpDto, ResetPasswordDto } from './dtos';
-import { AuthResponse } from './interface';
+import { RegisterDto } from './dtos/register-dto';
+import { AuthResponse } from './interface/auth-responce';
+import { VerifyOtpDto } from './dtos/verify-dto';
+import { LoginDto } from './dtos/login-dtos';
+import { ResetPasswordDto } from './dtos/reset-password';
+import { User } from '../user/models/user.model';
 
 @Injectable()
 export class AuthService {

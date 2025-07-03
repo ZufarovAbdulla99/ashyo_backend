@@ -6,9 +6,9 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Order } from 'src/modules/order';
-import { Region } from 'src/modules/region';
-import { User } from 'src/modules/user';
+import { Order } from 'src/modules/order/models/order.model';
+import { User } from 'src/modules/user/models/user.model';
+import { Region } from 'src/modules/region/entity/region.entity';
 
 @Entity({ name: 'address' })
 export class Address {

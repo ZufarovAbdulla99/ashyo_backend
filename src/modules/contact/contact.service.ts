@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TelegramService } from '../telegram/telegram.service';
-import { Contact } from './models';
-import { CreateContactDto } from './dtos';
+import { Contact } from './models/contact.model';
+import { CreateContactDto } from './dtos/create-comment.dto';
 
 @Injectable()
 export class ContactService {

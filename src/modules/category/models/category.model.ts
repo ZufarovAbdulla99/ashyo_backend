@@ -1,6 +1,3 @@
-import { Banner } from 'src/modules/banner';
-import { Product } from 'src/modules/product';
-import { Variation } from 'src/modules/variation';
 import {
   Entity,
   Column,
@@ -9,6 +6,9 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { Banner } from 'src/modules/banner/model/banner.model';
+import { Product } from 'src/modules/product/models/product.model';
+import { Variation } from 'src/modules/variation/models/variation.entity';
 
 @Entity({ name: 'categories' })
 export class Category {

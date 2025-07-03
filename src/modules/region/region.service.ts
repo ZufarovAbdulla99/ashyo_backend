@@ -1,9 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Region } from './entity';
-import { CreateRegionDto, UpdateRegionDto } from './dto';
 import { regionSeedData } from './region.seeds';
+import { Region } from './entity/region.entity';
+import { CreateRegionDto } from './dto/CreateRegionDto';
+import { UpdateRegionDto } from './dto/UpdateRegionDto';
 
 @Injectable()
 export class RegionService implements OnModuleInit {
@@ -67,11 +68,15 @@ export class RegionService implements OnModuleInit {
   }
 
   async getParentRegions(): Promise<Region[]> {
-    return this.regionRepository.find({
-      where: { parent: null },
-      order: { id: 'ASC' },
-    });
-  }
+  return this.regionRepository.find({
+    where: [
+      { parent: null, type: 'REGION' },
+      { parent: null, type: 'CITY' },
+    ],
+    order: { id: 'ASC' },
+  });
+}
+
 
   async updateRegion(id: number, dto: UpdateRegionDto): Promise<Region> {
     const region = await this.regionRepository.findOneBy({ id });

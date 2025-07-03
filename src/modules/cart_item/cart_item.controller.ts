@@ -7,12 +7,12 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { CartItemService } from './cart_item.service';
-import { CreateCartItemDto } from './dto';
-import { UpdateCartItemDto } from './dto';
-import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { Protected, Roles } from '@decorators';
+import { CartItemService } from './cart_item.service';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateCartItemDto } from './dto/create-cart_item.dto';
+import { UpdateCartItemDto } from './dto/update-cart_item.dto';
 
 @ApiTags('cart-item')
 @ApiBearerAuth()

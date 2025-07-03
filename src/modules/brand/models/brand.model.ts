@@ -1,4 +1,3 @@
-import { Product } from 'src/modules/product';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
+import { Product } from 'src/modules/product/models/product.model';
 
 @Entity({ name: 'brands' })
 export class Brand {

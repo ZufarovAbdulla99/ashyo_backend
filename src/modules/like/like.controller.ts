@@ -10,10 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LikeService } from './like.service';
-import { Like } from './models';
-import { CreateLikeDto, ToggleLikeDto, UpdateLikeDto } from './dtos';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { ToggleLikeDto } from './dtos/toggle-like.dto';
+import { Like } from './models/like.model';
+import { CreateLikeDto } from './dtos/create-like.dto';
+import { UpdateLikeDto } from './dtos/update-like.dto';
 
 @ApiTags('like')
 @Controller('like')

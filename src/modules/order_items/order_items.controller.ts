@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-import { OrderItems } from './models';
 import { OrderItemsService } from './order_items.service';
-import { CreateOrderItemDto } from './dto';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { OrderItems } from './models/order_item.entity';
+import { CreateOrderItemDto } from './dto/create-order_item.dto';
 
 @ApiTags('Order Items')
 @ApiBearerAuth()

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateCategoryRequest } from '../interfaces';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { CreateCategoryRequest } from '../interfaces/create-category.interface';
 
 export class CreateCategoryDto implements CreateCategoryRequest {
   @ApiProperty({

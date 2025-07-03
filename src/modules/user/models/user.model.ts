@@ -4,12 +4,12 @@ import {
   Column,
   OneToMany,
 } from 'typeorm';
-import { UserRoles } from '../enums';
-import { Address } from 'src/modules/address';
-import { Like } from 'src/modules/like';
-import { Comment } from 'src/modules/comment';
-import { Order } from 'src/modules/order';
-import { CartItem } from 'src/modules/cart_item';
+import { UserRoles } from '../enums/user-roles.enum';
+import { Address } from 'src/modules/address/entity/address.entity';
+import { Order } from 'src/modules/order/models/order.model';
+import { Like } from 'src/modules/like/models/like.model';
+import { CartItem } from 'src/modules/cart_item/models/cart_item.model';
+import { Comment } from 'src/modules/comment/models/comment.model';
 
 @Entity({ name: 'users' })
 export class User {

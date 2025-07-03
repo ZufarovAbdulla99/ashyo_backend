@@ -1,6 +1,6 @@
 import { IsNumber, IsOptional } from "class-validator";
-import { UpdateLikeRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { UpdateLikeRequest } from "../interfaces/update-like.interface";
 
 export class UpdateLikeDto implements UpdateLikeRequest {
     @ApiProperty({

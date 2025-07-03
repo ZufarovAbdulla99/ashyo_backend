@@ -3,51 +3,55 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { existsSync, mkdirSync, unlink, unlinkSync, writeFileSync } from 'fs';
 import { extname, join, resolve } from 'path';
 import { v4 } from 'uuid';
+import { promises as fsPromises, existsSync } from 'fs';
 
 @Injectable()
 export class FileService {
-  async uploadFile(file: Express.Multer.File) {
-    try {
-      const ext = extname(file.originalname);
-      const file_name = file.originalname + '_' + v4() + ext.toLowerCase();
-      const file_path = resolve(__dirname, '..', '..', '..', 'uploads');
-      if (!existsSync(file_path)) {
-        mkdirSync(file_path, { recursive: true });
-      }
-      writeFileSync(join(file_path, file_name), file.buffer);
-      return file_name;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Error on uploading file: ${error}`,
-      );
-    }
+  async uploadFile(file: Express.Multer.File): Promise<string> {
+  try {
+    const ext = extname(file.originalname);
+    const file_name = file.originalname + '_' + v4() + ext.toLowerCase();
+    const file_path = resolve(__dirname, '..', '..', '..', 'uploads');
+
+    // Asinxron papkani yaratish (mavjud bo'lmasa)
+    await fsPromises.mkdir(file_path, { recursive: true });
+
+    // Faylni asinxron yozish
+    await fsPromises.writeFile(join(file_path, file_name), file.buffer);
+
+    return file_name;
+  } catch (error) {
+    throw new InternalServerErrorException(
+      `Error on uploading file: ${error.message}`,
+    );
   }
+}
 
   async deleteFile(file_name: string) {
-    console.log("dwwwwwwwwwwwwwwwwwwww")
+    const file_path = resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'uploads',
+      file_name,
+    );
+
     try {
-      const file_path = resolve(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'uploads',
-        file_name,
-      );
       if (!existsSync(file_path)) {
-        throw new NotFoundException('File arleady deleted.');
+        console.warn(
+          `Warning: File "${file_name}" not found. Skipping delete.`,
+        );
+        return;
       }
-      console.log('dwdwddddddddddddddddddddd');
-      unlink(file_path, (error) => {
-        if (error) {
-          console.log(error);
-        }
-      });
+
+      await fsPromises.unlink(file_path);
     } catch (error) {
-      throw new NotFoundException(`Error on deleting file: ${error}`);
+      throw new InternalServerErrorException(
+        `Error on deleting file: ${error.message}`,
+      );
     }
   }
 }

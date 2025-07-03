@@ -1,11 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  CreateProductConfigurationDto,
-  UpdateProductConfigurationDto,
-} from './dto';
-import { ProductConfiguration } from './models';
+import { ProductConfiguration } from './models/product_configuration.model';
+import { CreateProductConfigurationDto } from './dto/create-product_configuration.dto';
+import { UpdateProductConfigurationDto } from './dto/update-product_configuration.dto';
 
 @Injectable()
 export class ProductConfigurationService {

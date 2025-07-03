@@ -5,18 +5,19 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
-  Put,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './models';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateUserDto, UpdateUserDto } from './dtos';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from './enums';
+import { UserRoles } from './enums/user-roles.enum';
+import { User } from './models/user.model';
+import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -65,7 +66,7 @@ export class UserController {
   @ApiConsumes('multipart/form-data')
   @Protected(true)
   @Roles([UserRoles.admin, UserRoles.user])
-  @Put('/:id')
+  @Patch('/:id')
   @UseInterceptors(FileInterceptor('image'))
   async updateUser(
     @Param('id') id: string,

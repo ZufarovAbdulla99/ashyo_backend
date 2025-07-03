@@ -13,7 +13,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { Product } from './models';
 import {
   ApiBearerAuth,
   ApiConsumes,
@@ -22,11 +21,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateProductDto, UpdateProductDto } from './dto';
-import { ProductFilterDto } from './interfaces';
 import { PaginatedResponse } from './interfaces/paginate-product.interface';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { Product } from './models/product.model';
+import { ProductFilterDto } from './interfaces/product-filer.interface';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @ApiTags('Products')
 @Controller('products')

@@ -1,4 +1,3 @@
-import { ProductItem } from 'src/modules/product_item';
 import {
   Entity,
   Column,
@@ -7,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
+import { ProductItem } from 'src/modules/product_item/models/product_item.entity';
 
 @Entity('color')
 export class Color {

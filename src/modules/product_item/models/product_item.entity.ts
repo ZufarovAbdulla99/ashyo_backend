@@ -1,3 +1,7 @@
+import { Color } from 'src/modules/color/models/color.model';
+import { OrderItems } from 'src/modules/order_items/models/order_item.entity';
+import { Product } from 'src/modules/product/models/product.model';
+import { ProductConfiguration } from 'src/modules/product_configuration/models/product_configuration.model';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -6,10 +10,6 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { Color } from 'src/modules/color';
-import { Product } from 'src/modules/product/models';
-import { ProductConfiguration } from 'src/modules/product_configuration';
-import { OrderItems } from 'src/modules/order_items';
 
 @Entity('product_item')
 export class ProductItem {

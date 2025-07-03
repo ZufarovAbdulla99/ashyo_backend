@@ -1,5 +1,0 @@
-export * from './dto'
-export * from './models'
-export * from './product_item.controller'
-export * from './product_item.service'
-export * from './product_item.module'

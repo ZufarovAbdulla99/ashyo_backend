@@ -1,10 +1,9 @@
-// me.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Address } from '../address/entity';
-import { Region } from '../region/entity';
-import { User } from './models';
+import { User } from './models/user.model';
+import { UpdateMeDto } from './dtos/update-me.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class MeService {
@@ -13,8 +12,8 @@ export class MeService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getUserById(id: number): Promise<User | null> {
-    return await this.userRepository.findOne({
+  async getUserById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
       where: { id },
       relations: [
         'address',
@@ -24,17 +23,32 @@ export class MeService {
         'order',
       ],
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
-  async updateUser(
-    id: number,
-    updateData: Partial<User>,
-  ): Promise<User | null> {
-    const user = await this.getUserById(id);
-    if (!user) return null;
-    if (!user.is_verified) throw new Error('User is not verified');
+  async updateUser(id: number, updateData: UpdateMeDto): Promise<User> {
+    try {
+      const user = await this.getUserById(id);
 
-    await this.userRepository.update(id, updateData);
-    return this.getUserById(id);
+      if (!user.is_verified) {
+        throw new BadRequestException('User is not verified');
+      }
+
+      // Parolni xashlash
+      if (updateData.password) {
+        updateData.password = await bcrypt.hash(updateData.password, 10);
+      }
+
+      await this.userRepository.update(id, updateData);
+      return await this.getUserById(id); // qayta o‘qib beradi
+    } catch (error) {
+      console.error('Update user error:', error.message);
+      throw error;
+    }
   }
 }

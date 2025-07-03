@@ -1,11 +1,12 @@
+import { Address } from 'src/modules/address/entity/address.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
-import { Address } from 'src/modules/address/entity';
 
 @Entity({ name: 'region' })
 export class Region {
@@ -27,6 +28,7 @@ export class Region {
     onUpdate: 'CASCADE',
     nullable: true,
   })
+  // @JoinColumn({ name: 'parentId' })
   parent: Region;
 
   @OneToMany(() => Region, (region) => region.parent)

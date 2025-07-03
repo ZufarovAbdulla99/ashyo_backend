@@ -1,5 +1,0 @@
-export * from "./dto"
-export * from "./entity"
-export * from "./region.controller"
-export * from "./region.service"
-export * from "./region.module"

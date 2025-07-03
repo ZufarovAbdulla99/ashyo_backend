@@ -1,5 +1,5 @@
-import { ProductConfiguration } from 'src/modules/product_configuration';
-import { Variation } from 'src/modules/variation/models';
+import { ProductConfiguration } from 'src/modules/product_configuration/models/product_configuration.model';
+import { Variation } from 'src/modules/variation/models/variation.entity';
 import {
   Entity,
   Column,

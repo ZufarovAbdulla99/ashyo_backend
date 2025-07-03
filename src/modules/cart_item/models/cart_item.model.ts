@@ -1,6 +1,3 @@
-// src/modules/cart/entities/cart_item.entity.ts
-import { Product } from 'src/modules/product';
-import { User } from 'src/modules/user';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { Product } from 'src/modules/product/models/product.model';
+import { User } from 'src/modules/user/models/user.model';
 
 @Entity({ name: 'cart_item' })
 export class CartItem {

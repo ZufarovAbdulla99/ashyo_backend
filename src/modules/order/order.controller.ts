@@ -16,10 +16,10 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Order } from './models/order.model';
 import { OrderService } from './order.service';
-import { OrderStatus } from './enums';
-import { CreateOrderDto, UpdateOrderDto } from './dto';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @ApiTags('orders')
 @ApiBearerAuth()

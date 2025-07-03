@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
-import { FileService } from '../file';
 import { CreateCategoryDto } from './dtos/create-category.dto';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
-import { Category } from './models';
+import { Category } from './models/category.model';
+import { FileService } from '../file/file.service';
 
 @Injectable()
 export class CategoryService {

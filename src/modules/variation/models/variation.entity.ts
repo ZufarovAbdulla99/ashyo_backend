@@ -1,4 +1,5 @@
-// variation.entity.ts
+import { Category } from 'src/modules/category/models/category.model';
+import { VariationOption } from 'src/modules/variation_option/models/variation_option.model';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,8 +8,6 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { Category } from 'src/modules/category';
-import { VariationOption } from 'src/modules/variation_option';
 
 @Entity({ name: 'variation' })
 export class Variation {

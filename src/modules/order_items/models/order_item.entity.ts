@@ -1,5 +1,5 @@
-import { Order } from 'src/modules/order/models';
-import { ProductItem } from 'src/modules/product_item';
+import { Order } from 'src/modules/order/models/order.model';
+import { ProductItem } from 'src/modules/product_item/models/product_item.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

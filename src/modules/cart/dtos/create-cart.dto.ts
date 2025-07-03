@@ -1,6 +1,6 @@
 import { IsNumber } from "class-validator";
-import { CreateCartRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { CreateCartRequest } from "../interfaces/create-cart.interface";
 
 export class CreateCartDto implements CreateCartRequest {
     @ApiProperty({

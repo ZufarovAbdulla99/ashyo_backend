@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
-import { UpdateBrandRequest } from '../interfaces';
+import { UpdateBrandRequest } from '../interfaces/update-brand.interface';
 
 export class UpdateBrandDto implements Omit<UpdateBrandRequest, 'id'> {
   @ApiProperty({

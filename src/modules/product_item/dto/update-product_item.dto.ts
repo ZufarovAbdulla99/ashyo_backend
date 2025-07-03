@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateProductItemDto } from './create-product_item.dto';
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class UpdateProductItemDto extends PartialType(CreateProductItemDto) {

@@ -1,6 +1,6 @@
 import { IsNumber, IsOptional } from "class-validator";
-import { UpdateCartRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { UpdateCartRequest } from "../interfaces/update-cart.interface";
 
 export class UpdateCartDto implements UpdateCartRequest {
     @ApiProperty({

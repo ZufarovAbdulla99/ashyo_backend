@@ -17,7 +17,7 @@ import {
 import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { Protected } from '@decorators';
-import { UserRoles } from '@modules';
+import { UserRoles } from 'src/modules/user/enums/user-roles.enum';
 
 export declare interface RequestInterface extends Request {
   userId: number | undefined;

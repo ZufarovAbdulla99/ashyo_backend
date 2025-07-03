@@ -6,10 +6,10 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { OrderStatus } from '../enums';
-import { User } from 'src/modules/user';
-import { Address } from 'src/modules/address';
-import { OrderItems } from 'src/modules/order_items';
+import { Address } from 'src/modules/address/entity/address.entity';
+import { OrderStatus } from '../enums/order-status.enum';
+import { User } from 'src/modules/user/models/user.model';
+import { OrderItems } from 'src/modules/order_items/models/order_item.entity';
 
 @Entity({ name: 'order' })
 export class Order {

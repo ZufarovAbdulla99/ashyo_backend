@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Address } from './entity';
-import { Region } from '../region';
-import { CreateAddressDto, UpdateAddressDto } from './dto';
 import { addressSeedData } from './address.seeds';
+import { Address } from './entity/address.entity';
+import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
+import { Region } from '../region/entity/region.entity';
 
 @Injectable()
 export class AddressService implements OnModuleInit {

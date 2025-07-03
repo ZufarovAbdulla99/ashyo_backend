@@ -1,6 +1,6 @@
 import { IsNumber } from "class-validator";
-import { CreateLikeRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { CreateLikeRequest } from "../interfaces/create-like.interface";
 
 export class CreateLikeDto implements CreateLikeRequest{
     @ApiProperty({

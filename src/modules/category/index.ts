@@ -1,6 +1,0 @@
-export * from "./interfaces"
-export * from "./dtos"
-export * from "./models"
-export * from "./category.controller"
-export * from "./category.service"
-export * from "./category.module"

@@ -10,14 +10,14 @@ import {
   UploadedFile,
   ParseIntPipe,
 } from '@nestjs/common';
-import { BrandService } from './brand.service';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Brand } from './models';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CreateBrandRequest, UpdateBrandRequest } from './interfaces';
-import { CreateBrandDto } from './dto';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { BrandService } from './brand.service';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateBrandDto } from './dto/create-brand.dto';
+import { Brand } from './models/brand.model';
+import { UpdateBrandRequest } from './interfaces/update-brand.interface';
 
 @ApiTags('Brand')
 @Controller('/brands')

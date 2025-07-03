@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UpdateCategoryRequest } from '../interfaces';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { UpdateCategoryRequest } from '../interfaces/update-category.interface';
 
 export class UpdateCategoryDto implements Omit<UpdateCategoryRequest, 'id'> {
   @ApiProperty({

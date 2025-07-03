@@ -5,11 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateLikeDto, ToggleLikeDto, UpdateLikeDto } from './dtos';
 import { Product } from '../product/models/product.model';
-import { Like } from './models';
-import { ProductService } from '../product';
+import { Repository } from 'typeorm';
+import { Like } from './models/like.model';
+import { ProductService } from '../product/product.service';
+import { ToggleLikeDto } from './dtos/toggle-like.dto';
+import { CreateLikeDto } from './dtos/create-like.dto';
+import { UpdateLikeDto } from './dtos/update-like.dto';
 
 @Injectable()
 export class LikeService {

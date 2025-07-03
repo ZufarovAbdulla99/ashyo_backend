@@ -1,5 +1,5 @@
 import { Product } from 'src/modules/product/models/product.model';
-import { User } from 'src/modules/user';
+import { User } from 'src/modules/user/models/user.model';
 import {
   Entity,
   PrimaryGeneratedColumn,

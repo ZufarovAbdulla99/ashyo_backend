@@ -1,3 +1,4 @@
+import { Product } from 'src/modules/product/models/product.model';
 import {
   Entity,
   Column,
@@ -7,8 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Product } from 'src/modules/product';
-// import { User } from 'src/modules/user'; // User modelini import qiling
+
 
 @Entity('cart')
 export class Cart {

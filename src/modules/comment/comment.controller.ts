@@ -10,10 +10,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CommentService } from './comment.service';
-import { Comment } from './models';
-import { CreateCommentDto, UpdateCommentDto } from './dtos';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateCommentDto } from './dtos/create-comment.dto';
+import { UpdateCommentDto } from './dtos/update-comment.dto';
+import { Comment } from './models/comment.model';
 
 @ApiTags('comment')
 @ApiBearerAuth()

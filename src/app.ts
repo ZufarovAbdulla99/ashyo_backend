@@ -6,50 +6,48 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { appConfig, databaseConfig, jwtConfig } from '@config';
-import { SeedsModule } from '@seeds';
-import {
-  Brand,
-  BrandModule,
-  Address,
-  AddressModule,
-  Cart,
-  CartItem,
-  CartItemModule,
-  CartModule,
-  Category,
-  CategoryModule,
-  Comment,
-  CommentModule,
-  FileModule,
-  Like,
-  LikeModule,
-  Order,
-  OrderItems,
-  OrderItemsModule,
-  OrderModule,
-  Product,
-  ProductConfiguration,
-  ProductConfigurationModule,
-  ProductItem,
-  ProductItemModule,
-  ProductModule,
-  Region,
-  User,
-  UserModule,
-  Variation,
-  VariationModule,
-  VariationOption,
-  VariationOptionModule,
-  Color,
-  ColorModule,
-  Contact,
-  ContactModule,
-  TelegramModule,
-  Banner,
-  BannerModule,
-  RegionModule,
-  AuthModule,
-} from '@modules';
+import { User } from './modules/user/models/user.model';
+import { Like } from './modules/like/models/like.model';
+import { Comment } from './modules/comment/models/comment.model';
+import { Cart } from './modules/cart/models/cart.model';
+import { CartItem } from './modules/cart_item/models/cart_item.model';
+import { Order } from './modules/order/models/order.model';
+import { OrderItems } from './modules/order_items/models/order_item.entity';
+import { ProductConfiguration } from './modules/product_configuration/models/product_configuration.model';
+import { ProductItem } from './modules/product_item/models/product_item.entity';
+import { Variation } from './modules/variation/models/variation.entity';
+import { VariationOption } from './modules/variation_option/models/variation_option.model';
+import { Region } from './modules/region/entity/region.entity';
+import { Product } from './modules/product/models/product.model';
+import { Category } from './modules/category/models/category.model';
+import { Brand } from './modules/brand/models/brand.model';
+import { Contact } from './modules/contact/models/contact.model';
+import { Banner } from './modules/banner/model/banner.model';
+import { Address } from './modules/address/entity/address.entity';
+import { Color } from './modules/color/models/color.model';
+import { UserModule } from './modules/user/user.module';
+import { RegionModule } from './modules/region/region.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { FileModule } from './modules/file/file.module';
+import { LikeModule } from './modules/like/like.module';
+import { CommentModule } from './modules/comment/comment.module';
+import { CartModule } from './modules/cart/cart.module';
+import { CartItemModule } from './modules/cart_item/cart_item.module';
+import { OrderModule } from './modules/order/order.module';
+import { OrderItemsModule } from './modules/order_items/order_items.module';
+import { ProductConfigurationModule } from './modules/product_configuration/product_configuration.module';
+import { ProductItemModule } from './modules/product_item/product_item.module';
+import { VariationModule } from './modules/variation/variation.module';
+import { VariationOptionModule } from './modules/variation_option/variation_option.module';
+import { CategoryModule } from './modules/category/category.module';
+import { ProductModule } from './modules/product/product.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { SeedsModule } from './seeds/seeds.module';
+import { AddressModule } from './modules/address/address.module';
+import { BannerModule } from './modules/banner/banner.module';
+import { ColorModule } from './modules/color/color.module';
+import { ContactModule } from './modules/contact/contact.module';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -146,7 +144,8 @@ import {
             Address,
             Color,
           ],
-          // synchronize: true,
+          autoLoadEntities: true,
+          synchronize: true,
           logging: true,
 
           // Agar kerak bo‘lsa quyidagilarni qo‘shish mumkin:
@@ -154,7 +153,8 @@ import {
           //   rejectUnauthorized: false,
           // },
 
-          dropSchema: true,
+          dropSchema: false,
+          // dropSchema: true,
         };
       },
     }),

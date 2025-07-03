@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { ProductItemService } from './product_item.service';
-import { CreateProductItemDto } from './dto';
-import { UpdateProductItemDto } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from '../user';
+import { UserRoles } from '../user/enums/user-roles.enum';
+import { CreateProductItemDto } from './dto/create-product_item.dto';
+import { UpdateProductItemDto } from './dto/update-product_item.dto';
 
 @Controller('product-items')
 export class ProductItemController {

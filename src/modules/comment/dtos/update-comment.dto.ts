@@ -1,6 +1,6 @@
 import { IsNumber, IsOptional, IsString } from "class-validator";
-import { UpdateCommentRequest } from "../interfaces";
 import { ApiProperty } from "@nestjs/swagger";
+import { UpdateCommentRequest } from "../interfaces/update-comment.interface";
 
 export class UpdateCommentDto implements UpdateCommentRequest {
     @ApiProperty({

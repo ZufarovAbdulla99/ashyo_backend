@@ -1,4 +1,4 @@
-import { Region } from './entity';
+import { Region } from "./entity/region.entity";
 
 export const regionSeedData: Partial<Region>[] = [
   {

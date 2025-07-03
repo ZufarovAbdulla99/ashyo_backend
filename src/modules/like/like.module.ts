@@ -2,9 +2,8 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LikeService } from './like.service';
 import { LikeController } from './like.controller';
-import { Like } from './models';
-// import { Product } from '../product/models/product.model';
-import { ProductModule } from '../product';
+import { Like } from 'typeorm';
+import { ProductModule } from '../product/product.module';
 
 @Module({
   imports: [

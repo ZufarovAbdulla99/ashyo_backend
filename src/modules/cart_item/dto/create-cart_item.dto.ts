@@ -1,8 +1,5 @@
-import { IsNotEmpty, IsNumber, Min, IsPositive } from 'class-validator';
-import { Attributes } from 'sequelize';
+import { IsNotEmpty, Min, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-import { CartItem } from '../models';
 
 // CreateCartItemDto
 export class CreateCartItemDto {

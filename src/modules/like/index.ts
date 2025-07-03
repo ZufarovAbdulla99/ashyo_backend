@@ -1,6 +1,0 @@
-export * from './dtos'
-export * from './interfaces'
-export * from './models'
-export * from './like.controller'
-export * from './like.service'
-export * from './like.module'

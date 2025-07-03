@@ -3,16 +3,15 @@ import {
   Get,
   Param,
   Patch,
-  Delete,
   Body,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { MeService } from './me.service';
-import { User } from './models';
 import { Protected, Roles } from '@decorators';
-import { UserRoles } from './enums';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UserRoles } from './enums/user-roles.enum';
+import { UpdateMeDto } from './dtos/update-me.dto';
 
 @Controller('me')
 @ApiBearerAuth()
@@ -23,6 +22,9 @@ export class MeController {
   @Protected(true)
   @Roles([UserRoles.admin, UserRoles.user])
   @Get(':id')
+  @ApiOperation({ summary: 'Get single user info' })
+  @ApiResponse({ status: 200, description: 'User found' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async getUser(@Param('id') id: number) {
     const user = await this.meService.getUserById(id);
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -32,7 +34,10 @@ export class MeController {
   @Protected(true)
   @Roles([UserRoles.admin, UserRoles.user])
   @Patch(':id')
-  async updateUser(@Param('id') id: number, @Body() updateData: Partial<User>) {
+  @ApiOperation({ summary: 'Update user self data' })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async updateUser(@Param('id') id: number, @Body() updateData: UpdateMeDto) {
     try {
       const updatedUser = await this.meService.updateUser(id, updateData);
       if (!updatedUser)

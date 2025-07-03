@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Variation } from './models';
-import { Category } from '../category';
 import { CreateVariationDto } from './dto/create-variation.dto';
 import { UpdateVariationDto } from './dto/update-variation.dto';
+import { Variation } from './models/variation.entity';
+import { Category } from '../category/models/category.model';
 
 @Injectable()
 export class VariationService {

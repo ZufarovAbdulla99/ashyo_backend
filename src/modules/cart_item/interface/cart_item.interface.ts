@@ -1,4 +1,3 @@
-// src/modules/cart-item/interfaces/cart-item.interface.ts
 export interface CartItemInterface {
     id?: number;
     cart_id: number;

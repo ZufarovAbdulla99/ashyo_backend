@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CartService } from "./cart.service";
-import { Cart } from "./models";
-import { CreateCartDto, UpdateCartDto } from "./dtos";
 import { Protected, Roles } from "@decorators";
-import { UserRoles } from "../user";
+import { UserRoles } from "../user/enums/user-roles.enum";
+import { Cart } from "./models/cart.model";
+import { UpdateCartDto } from "./dtos/update-cart.dto";
 
 @ApiTags('cart')
 @ApiBearerAuth()
